@@ -6,6 +6,15 @@ import type Database from 'better-sqlite3';
  * so we catch errors for columns that already exist.
  */
 export function runMigrations(db: Database.Database): void {
+  // Check if the sites table exists — if not, this is a fresh DB and schema.sql will create it
+  const tableExists = db.prepare(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='sites'"
+  ).get();
+
+  if (!tableExists) {
+    return; // Fresh DB — schema.sql will create the table with all columns
+  }
+
   const newColumns = [
     { name: 'company_name', sql: 'ALTER TABLE sites ADD COLUMN company_name TEXT' },
     { name: 'industry_segment', sql: 'ALTER TABLE sites ADD COLUMN industry_segment TEXT' },

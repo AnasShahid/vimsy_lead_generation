@@ -19,10 +19,23 @@ export function getDb(): Database.Database {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
 
-    const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
-    db.exec(schema);
-
+    // Run migrations to add any missing columns to existing tables
+    // Must run before schema.sql so indexes on new columns don't fail
     runMigrations(db);
+
+    const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
+    // Execute schema line-by-line so individual CREATE INDEX failures don't block everything
+    for (const stmt of schema.split(';').map(s => s.trim()).filter(Boolean)) {
+      try {
+        db.exec(stmt);
+      } catch (err: any) {
+        // Ignore errors for CREATE TABLE IF NOT EXISTS (table already exists)
+        // and CREATE INDEX IF NOT EXISTS (already exists)
+        if (!err.message.includes('already exists')) {
+          console.error(`[DB] Schema error: ${err.message}`);
+        }
+      }
+    }
   }
   return db;
 }
