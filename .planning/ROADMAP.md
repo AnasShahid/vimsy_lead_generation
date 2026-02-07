@@ -10,7 +10,7 @@
 ## Progress
 
 ```
-Phase 1  ░░░░░░░░░░  0%  Discovery Improvements
+Phase 1  ██████████ 100%  Discovery Improvements
 Phase 2  ░░░░░░░░░░  0%  Contact Enrichment
 Phase 3  ░░░░░░░░░░  0%  Technical Analysis & Scoring
 Phase 4  ░░░░░░░░░░  0%  PDF Report Generation
@@ -27,13 +27,13 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 **Requirements:** REQ-012, REQ-013, REQ-014, REQ-015
 
 **Success Criteria:**
-- [ ] Google Search provider removed from codebase and UI
-- [ ] Hunter.io lead list import provider works end-to-end (API key → list selection → import)
-- [ ] Pre-analyzed Excel/CSV upload imports into database with all enriched fields (company name, industry, fit reasoning, priority)
-- [ ] AI analysis service enriches discovered sites with industry/segment, fit reasoning, and Hot/Warm/Cold priority
-- [ ] Database schema includes new enrichment columns (company_name, industry_segment, ai_fit_reasoning, priority, etc.)
-- [ ] Geographic filtering limits results to AU, US, UK, NZ, CA markets
-- [ ] Discovery results table displays enriched columns
+- [x] Google Search provider removed from codebase and UI
+- [x] Hunter.io lead list import provider works end-to-end (API key → list selection → import)
+- [x] Pre-analyzed Excel/CSV upload imports into database with all enriched fields (company name, industry, fit reasoning, priority)
+- [x] AI analysis service enriches discovered sites with industry/segment, fit reasoning, and Hot/Warm/Cold priority
+- [x] Database schema includes new enrichment columns (company_name, industry_segment, ai_fit_reasoning, priority, etc.)
+- [x] Geographic filtering limits results to AU, US, UK, NZ, CA markets
+- [x] Discovery results table displays enriched columns
 
 **Research flag:** Recommended (Hunter.io Leads API, AI analysis prompt design)
 
@@ -154,10 +154,10 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | REQ-009 | — | ✅ Done |
 | REQ-010 | — | ✅ Done |
 | REQ-011 | — | ✅ Done |
-| REQ-012 | 1 | Pending |
-| REQ-013 | 1 | Pending |
-| REQ-014 | 1 | Pending |
-| REQ-015 | 1 | Pending |
+| REQ-012 | 1 | ✅ Done |
+| REQ-013 | 1 | ✅ Done |
+| REQ-014 | 1 | ✅ Done |
+| REQ-015 | 1 | ✅ Done |
 | REQ-016 | 2 | Pending |
 | REQ-017 | 2 | Pending |
 | REQ-018 | 3 | Pending |
@@ -186,4 +186,4 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | 6 — Pipeline Dashboard & Metrics | Low | 1 |
 
 ---
-*Last updated: 2026-02-07*
+*Last updated: 2026-02-07 — Phase 1 complete*

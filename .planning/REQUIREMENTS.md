@@ -81,10 +81,10 @@
 | REQ-009 | — | — | ✅ Done |
 | REQ-010 | — | — | ✅ Done |
 | REQ-011 | — | — | ✅ Done |
-| REQ-012 | 1 | 01-01 | Pending |
-| REQ-013 | 1 | 01-02, 01-03 | Pending |
-| REQ-014 | 1 | 01-02 | Pending |
-| REQ-015 | 1 | 01-03 | Pending |
+| REQ-012 | 1 | 01-01 | ✅ Done |
+| REQ-013 | 1 | 01-02, 01-03 | ✅ Done |
+| REQ-014 | 1 | 01-02 | ✅ Done |
+| REQ-015 | 1 | 01-03 | ✅ Done |
 | REQ-016 | 2 | TBD | Pending |
 | REQ-017 | 2 | TBD | Pending |
 | REQ-018 | 3 | TBD | Pending |
