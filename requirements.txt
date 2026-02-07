@@ -1,0 +1,22 @@
+# Core dependencies
+python-dotenv==1.0.0
+
+# Web scraping
+requests==2.31.0
+beautifulsoup4==4.12.2
+selenium==4.16.0
+
+# Data processing
+pandas==2.1.4
+
+# Google APIs (uncomment if needed)
+# google-auth==2.25.2
+# google-auth-oauthlib==1.2.0
+# google-auth-httplib2==0.2.0
+# google-api-python-client==2.111.0
+
+# OpenAI (uncomment if needed)
+# openai==1.6.1
+
+# Anthropic (uncomment if needed)
+# anthropic==0.8.1

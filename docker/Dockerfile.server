@@ -1,0 +1,34 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY package.json ./
+COPY shared/package.json ./shared/
+COPY server/package.json ./server/
+
+RUN npm install --workspace=shared --workspace=server
+
+COPY shared/ ./shared/
+COPY server/ ./server/
+
+RUN npm run build --workspace=shared
+RUN npm run build --workspace=server
+
+FROM node:20-alpine
+WORKDIR /app
+
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/shared/package.json ./shared/
+COPY --from=builder /app/server/package.json ./server/
+COPY --from=builder /app/node_modules/ ./node_modules/
+COPY --from=builder /app/shared/dist/ ./shared/dist/
+COPY --from=builder /app/server/dist/ ./server/dist/
+COPY --from=builder /app/server/src/db/schema.sql ./server/dist/db/schema.sql
+
+RUN mkdir -p /app/data
+
+ENV NODE_ENV=production
+ENV PORT=3001
+
+EXPOSE 3001
+
+CMD ["node", "server/dist/index.js"]

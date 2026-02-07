@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n Lead Generation Automation - Vimsy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1e3a8a;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.2em;
+        }
+
+        .workflow-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .workflow-section {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .workflow-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-card {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            transform: translateX(5px);
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .step-content {
+            color: #475569;
+            margin-left: 55px;
+        }
+
+        .api-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .api-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .api-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        .api-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .badge-free {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-paid {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .email-template {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .email-subject {
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .email-body {
+            color: #475569;
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .checklist li {
+            padding: 10px 0 10px 35px;
+            position: relative;
+            color: #475569;
+        }
+
+        .checklist li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .priority-critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .priority-high {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-low {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .workflow-diagram {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .node {
+            background: #667eea;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 500px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .arrow {
+            color: #667eea;
+            font-size: 2em;
+            margin: 5px 0;
+        }
+
+        .stats-bar {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #1e3a8a;
+            font-weight: bold;
+        }
+
+        footer {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        .phase-timeline {
+            margin: 30px 0;
+        }
+
+        .phase {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .phase-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .phase-tasks {
+            margin-left: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow-tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 n8n Lead Generation Automation</h1>
+            <p class="subtitle">Automated WordPress Site Discovery, Analysis & Cold Email Outreach for Vimsy</p>
+        </header>
+
+        <div class="workflow-tabs">
+            <button class="tab-btn active" onclick="showTab('overview')">📋 Overview</button>
+            <button class="tab-btn" onclick="showTab('workflow')">🔄 Workflow</button>
+            <button class="tab-btn" onclick="showTab('step1')">🔍 Step 1: Find Sites</button>
+            <button class="tab-btn" onclick="showTab('step2')">👤 Step 2: Enrich Data</button>
+            <button class="tab-btn" onclick="showTab('step3')">🔬 Step 3: Analysis</button>
+            <button class="tab-btn" onclick="showTab('step4')">📄 Step 4: PDF Reports</button>
+            <button class="tab-btn" onclick="showTab('step5')">📧 Step 5: Email Outreach</button>
+            <button class="tab-btn" onclick="showTab('implementation')">🚀 Implementation</button>
+        </div>
+
+        <div id="overview" class="workflow-section active">
+            <h2>🎯 Automation Overview</h2>
+            
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Expected Output</div>
+                    <div class="metric-value">50+</div>
+                    <div class="metric-label">Qualified leads per week</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Setup Time</div>
+                    <div class="metric-value">8-12</div>
+                    <div class="metric-label">Hours</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Monthly Cost</div>
+                    <div class="metric-value">$0-50</div>
+                    <div class="metric-label">Using free tiers</div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3 class="step-title">🎯 Goal</h3>
+                <div class="step-content">
+                    Automatically find WordPress sites, analyze them, generate branded PDF reports, and execute cold email outreach campaigns.
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3 class="step-title">📊 Expected Results</h3>
+                <div class="step-content">
+                    <div class="stats-bar">
+                        <div class="stat-row">
+                            <span class="stat-label">Daily Sites Analyzed</span>
+                            <span class="stat-value">50</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Weekly Responses</span>
+                            <span class="stat-value">7-10 (3% rate)</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Monthly Consultations</span>
+                            <span class="stat-value">8-12</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">New Customers/Month</span>
+                            <span class="stat-value">2-4</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Cost per Acquisition</span>
+                            <span class="stat-value">$33</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3 class="step-title">💰 Cost Breakdown</h3>
+                <div class="step-content">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Free Tier</th>
+                                    <th>Paid Option</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>n8n (self-hosted)</td>
+                                    <td><span class="api-badge badge-free">$0</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>Hunter.io</td>
+                                    <td><span class="api-badge badge-free">$0 (50/month)</span></td>
+                                    <td>$49 (500/month)</td>
+                                </tr>
+                                <tr>
+                                    <td>Google APIs</td>
+                                    <td><span class="api-badge badge-free">$0</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>PDFShift</td>
+                                    <td><span class="api-badge badge-free">$0 (250/month)</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>Gmail/SMTP</td>
+                                    <td><span class="api-badge badge-free">$0</span></td>
+                                    <td>Instantly.ai $37/month</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Monthly</strong></td>
+                                    <td><strong>$0</strong></td>
+                                    <td><strong>$91-96</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="workflow" class="workflow-section">
+            <h2>🔄 Complete Workflow Diagram</h2>
+            
+            <div class="workflow-diagram">
+                <div class="node">STEP 1: Find WordPress Sites (BuiltWith API)</div>
+                <div class="arrow">↓</div>
+                <div class="node">Filter: WordPress, specific industries, recent activity</div>
+                <div class="arrow">↓</div>
+                <div class="node">STEP 2: Enrich Data (Hunter.io, Clearbit)</div>
+                <div class="arrow">↓</div>
+                <div class="node">Find email addresses, company info, decision makers</div>
+                <div class="arrow">↓</div>
+                <div class="node">STEP 3: Technical Analysis (Lighthouse, Security)</div>
+                <div class="arrow">↓</div>
+                <div class="node">Performance, security, SEO scores + specific issues</div>
+                <div class="arrow">↓</div>
+                <div class="node">STEP 4: Generate PDF Report (Puppeteer + Template)</div>
+                <div class="arrow">↓</div>
+                <div class="node">Branded Vimsy report with findings and recommendations</div>
+                <div class="arrow">↓</div>
+                <div class="node">STEP 5: Send Cold Email Sequence (Gmail/SMTP)</div>
+                <div class="arrow">↓</div>
+                <div class="node">Day 1, 3, 7, 14 follow-ups with personalized content</div>
+                <div class="arrow">↓</div>
+                <div class="node">STEP 6: Track Responses & Store Data (Google Sheets)</div>
+            </div>
+        </div>
+
+        <div id="step1" class="workflow-section">
+            <h2>🔍 STEP 1: Find WordPress Sites</h2>
+
+            <div class="step-card">
+                <div class="step-title">Data Sources (Priority Order)</div>
+                <div class="step-content">
+                    <div class="api-card">
+                        <div class="api-header">
+                            <div class="api-name">Option 1: BuiltWith API (Preferred)</div>
+                            <div class="api-badge badge-paid">$295/month</div>
+                        </div>
+                        <p><strong>What it does:</strong> Find websites using WordPress</p>
+                        <p><strong>Filters available:</strong></p>
+                        <ul class="checklist">
+                            <li>Technology: WordPress</li>
+                            <li>Country/region</li>
+                            <li>Traffic level</li>
+                            <li>Vertical/industry</li>
+                            <li>Company size</li>
+                        </ul>
+                        <div class="code-block">GET https://api.builtwith.com/v20/api.json
+Params:
+  - KEY: your_api_key
+  - LOOKUP: domain.com
+  - TECH: wordpress</div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-header">
+                            <div class="api-name">Option 2: Wappalyzer API</div>
+                            <div class="api-badge badge-free">Free tier: 50/month</div>
+                        </div>
+                        <p><strong>What it does:</strong> Detect technologies on websites</p>
+                        <p><strong>Better for:</strong> Individual site analysis</p>
+                        <div class="code-block">GET https://api.wappalyzer.com/v2/lookup/
+Headers:
+  - x-api-key: your_api_key
+Params:
+  - urls: domain.com</div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-header">
+                            <div class="api-name">Option 3: Manual List + Web Scraping</div>
+                            <div class="api-badge badge-free">Free</div>
+                        </div>
+                        <p><strong>Source:</strong> Google search with specific queries</p>
+                        <p><strong>Queries to use:</strong></p>
+                        <ul class="checklist">
+                            <li>"powered by wordpress" + [industry]</li>
+                            <li>inurl:wp-content [industry]</li>
+                            <li>inurl:wp-includes [industry]</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-title">🎯 Target Filters for Lead Quality</div>
+                <div class="step-content">
+                    <h4>Industry Focus (Choose 2-3 to start):</h4>
+                    <ul class="checklist">
+                        <li>Law firms</li>
+                        <li>Medical practices</li>
+                        <li>Restaurants</li>
+                        <li>Real estate agencies</li>
+                        <li>Consulting firms</li>
+                        <li>E-commerce stores</li>
+                    </ul>
+
+                    <h4 style="margin-top: 20px;">Quality Indicators:</h4>
+                    <ul class="checklist">
+                        <li>Active site (updated in last 30 days)</li>
+                        <li>Has contact information</li>
+                        <li>Professional design (not template default)</li>
+                        <li>Business email domain (not Gmail)</li>
+                        <li>Traffic > 1,000 visits/month</li>
+                        <li>Based in target geography</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="step2" class="workflow-section">
+            <h2>👤 STEP 2: Enrich Contact Data</h2>
+
+            <div class="api-card">
+                <div class="api-header">
+                    <div class="api-name">Hunter.io API (Recommended)</div>
+                    <div class="api-badge badge-free">Free: 50/month</div>
+                </div>
+                <p><strong>What it finds:</strong> Email addresses associated with domain</p>
+                <p><strong>Accuracy:</strong> ~95%</p>
+                <div class="code-block">GET https://api.hunter.io/v2/domain-search
+Params:
+  - domain: example.com
+  - api_key: your_key
+  - type: personal (to find decision makers)
+
+Returns:
+  - Email addresses
+  - Name
+  - Position/title
+  - Confidence score
+  - Verification status</div>
+            </div>
+
+            <div class="api-card">
+                <div class="api-header">
+                    <div class="api-name">Clearbit API (Company Data)</div>
+                    <div class="api-badge badge-free">Free tier available</div>
+                </div>
+                <p><strong>What it finds:</strong></p>
+                <ul class="checklist">
+                    <li>Company name</li>
+                    <li>Employee count</li>
+                    <li>Industry</li>
+                    <li>Tech stack</li>
+                    <li>Social profiles</li>
+                </ul>
+                <div class="code-block">GET https://company.clearbit.com/v2/companies/find
+Params:
+  - domain: example.com
+Headers:
+  - Authorization: Bearer your_key</div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-title">🎯 Target Contact Titles (Priority Order)</div>
+                <div class="step-content">
+                    <ol style="margin-left: 20px;">
+                        <li style="padding: 8px 0;"><strong>Owner</strong></li>
+                        <li style="padding: 8px 0;"><strong>CEO / Founder</strong></li>
+                        <li style="padding: 8px 0;"><strong>Marketing Director</strong></li>
+                        <li style="padding: 8px 0;"><strong>Operations Manager</strong></li>
+                        <li style="padding: 8px 0;"><strong>IT Manager</strong></li>
+                        <li style="padding: 8px 0;"><strong>Office Manager</strong></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div id="step3" class="workflow-section">
+            <h2>🔬 STEP 3: Technical Site Analysis</h2>
+
+            <div class="step-card">
+                <div class="step-title">Analysis Tools (All Free APIs)</div>
+                <div class="step-content">
+                    <div class="api-card">
+                        <div class="api-header">
+                            <div class="api-name">1. Google PageSpeed Insights (Lighthouse)</div>
+                            <div class="api-badge badge-free">Free</div>
+                        </div>
+                        <p><strong>What it checks:</strong> Performance, accessibility, SEO, best practices</p>
+                        <p><strong>Response time:</strong> 20-40 seconds per site</p>
+                        <div class="code-block">GET https://www.googleapis.com/pagespeedonline/v5/runPagespeed
+Params:
+  - url: https://example.com
+  - key: your_google_api_key
+  - category: performance,accessibility,seo,best-practices
+  - strategy: mobile</div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-header">
+                            <div class="api-name">2. SSL Labs API (Security)</div>
+                            <div class="api-badge badge-free">Free</div>
+                        </div>
+                        <p><strong>What it checks:</strong> SSL/TLS configuration</p>
+                        <p><strong>Response time:</strong> 60-120 seconds per site</p>
+                        <div class="code-block">GET https://api.ssllabs.com/api/v3/analyze
+Params:
+  - host: example.com
+  - publish: off
+  - startNew: on</div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-header">
+                            <div class="api-name">3. WordPress Version Detection</div>
+                            <div class="api-badge badge-free">Free</div>
+                        </div>
+                        <p><strong>Method:</strong> Direct HTTP request to site</p>
+                        <p><strong>What to check:</strong></p>
+                        <ul class="checklist">
+                            <li>/readme.html (WordPress version)</li>
+                            <li>Meta generator tag</li>
+                            <li>wp-json/wp/v2 endpoint</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-title">📊 Analysis Scoring System</div>
+                <div class="step-content">
+                    <h4>Create a "Health Score" (0-100)</h4>
+                    <div class="stats-bar">
+                        <div class="stat-row">
+                            <span class="stat-label">Performance (30 points)</span>
+                            <span class="stat-value">Score based on Lighthouse</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Security (30 points)</span>
+                            <span class="stat-value">SSL grade, WordPress version, headers</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">SEO (20 points)</span>
+                            <span class="stat-value">SEO score, meta tags, sitemap</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Availability (20 points)</span>
+                            <span class="stat-value">Uptime, response time</span>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 20px;">Priority Scoring:</h4>
+                    <div style="margin-top: 15px;">
+                        <p style="padding: 10px;"><span class="priority-badge priority-critical">0-40: 🔥 CRITICAL</span> - Immediate outreach</p>
+                        <p style="padding: 10px;"><span class="priority-badge priority-high">41-60: ⚠️ HIGH</span> - Strong opportunity</p>
+                        <p style="padding: 10px;"><span class="priority-badge priority-medium">61-75: ⚡ MEDIUM</span> - Good opportunity</p>
+                        <p style="padding: 10px;"><span class="priority-badge priority-low">76-100: ✅ LOW</span> - Maintenance only</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step4" class="workflow-section">
+            <h2>📄 STEP 4: Generate PDF Reports</h2>
+
+            <div class="step-card">
+                <div class="step-title">Report Structure (7 Pages)</div>
+                <div class="step-content">
+                    <h4>Page 1: Cover Page</h4>
+                    <ul class="checklist">
+                        <li>Vimsy logo (top)</li>
+                        <li>"WordPress Site Health Report"</li>
+                        <li>Company name</li>
+                        <li>Website URL</li>
+                        <li>Report date</li>
+                        <li>Generated for: [Contact Name]</li>
+                    </ul>
+
+                    <h4>Page 2: Executive Summary</h4>
+                    <ul class="checklist">
+                        <li>Overall Health Score (large visual)</li>
+                        <li>Traffic light status: Red/Yellow/Green</li>
+                        <li>Quick summary paragraph</li>
+                        <li>Key stats in boxes</li>
+                    </ul>
+
+                    <h4>Page 3: Performance Analysis</h4>
+                    <ul class="checklist">
+                        <li>Current performance score</li>
+                        <li>Load time (mobile & desktop)</li>
+                        <li>Key metrics with explanations</li>
+                        <li>Issues identified (bulleted list)</li>
+                    </ul>
+
+                    <h4>Page 4: Security Analysis</h4>
+                    <ul class="checklist">
+                        <li>SSL certificate status</li>
+                        <li>WordPress version status</li>
+                        <li>Security headers checklist</li>
+                        <li>Vulnerabilities found</li>
+                        <li>Risk level: Critical/High/Medium/Low</li>
+                    </ul>
+
+                    <h4>Page 5: SEO & Best Practices</h4>
+                    <ul class="checklist">
+                        <li>SEO score</li>
+                        <li>Missing elements</li>
+                        <li>Accessibility issues</li>
+                        <li>Mobile-friendliness</li>
+                    </ul>
+
+                    <h4>Page 6: Recommendations & Next Steps</h4>
+                    <ul class="checklist">
+                        <li>Prioritized action items (Critical/High/Medium)</li>
+                        <li>Estimated time to fix (DIY)</li>
+                        <li>Estimated cost (if outsourced)</li>
+                    </ul>
+
+                    <h4>Page 7: About Vimsy</h4>
+                    <ul class="checklist">
+                        <li>Who we are</li>
+                        <li>What we do</li>
+                        <li>Our pricing tiers</li>
+                        <li>30-day guarantee</li>
+                        <li>Call to action: "Schedule Free Consultation"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <div class="api-header">
+                    <div class="api-name">PDF Generation: Puppeteer (Recommended)</div>
+                    <div class="api-badge badge-free">Free</div>
+                </div>
+                <p><strong>Method:</strong> HTML → PDF conversion</p>
+                <p><strong>Pros:</strong> Most flexible, best looking</p>
+                <p><strong>Process:</strong></p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li style="padding: 5px 0;">Create HTML template with data</li>
+                    <li style="padding: 5px 0;">Use Puppeteer node to convert to PDF</li>
+                    <li style="padding: 5px 0;">Style with inline CSS</li>
+                    <li style="padding: 5px 0;">Save PDF to cloud storage (Google Drive)</li>
+                </ol>
+            </div>
+
+            <div class="api-card">
+                <div class="api-header">
+                    <div class="api-name">Alternative: PDFShift API</div>
+                    <div class="api-badge badge-free">Free: 250 PDFs/month</div>
+                </div>
+                <p><strong>Method:</strong> Send HTML to API, get PDF back</p>
+                <p><strong>Pros:</strong> Easiest, no local processing</p>
+                <div class="code-block">POST https://api.pdfshift.io/v3/convert/pdf
+Headers:
+  - Authorization: Basic base64(api_key:)
+Body:
+  - source: &lt;html&gt;...&lt;/html&gt;
+  - landscape: false
+  - format: A4</div>
+            </div>
+        </div>
+
+        <div id="step5" class="workflow-section">
+            <h2>📧 STEP 5: Cold Email Outreach Sequence</h2>
+
+            <div class="email-template">
+                <div class="email-subject">Email 1: Initial Outreach (Day 0)</div>
+                <div style="margin-top: 10px; font-weight: 600;">Subject: "Quick security question about [company].com"</div>
+                <div class="email-body">
+Hi [FirstName],
+
+I was analyzing [Website] and noticed some issues that could be affecting your business.
+
+I've put together a detailed report showing:
+✓ Your site's performance score
+✓ Security vulnerabilities found
+✓ Specific recommendations
+
+You can view the full report here: [PDF Link]
+
+Key findings:
+- Performance Score: [Score]/100
+- [Specific Issue 1]
+- [Specific Issue 2]
+
+Would you like help addressing these? I can hop on a quick call to walk through the findings.
+
+Best,
+Arslan
+Founder, Vimsy
+P: +1 (201) 248-8372
+
+P.S. This report is completely free - just wanted to help!
+                </div>
+            </div>
+
+            <div class="email-template">
+                <div class="email-subject">Email 2: Value Follow-Up (Day 3)</div>
+                <div style="margin-top: 10px; font-weight: 600;">Subject: "Re: Quick security question about [company].com"</div>
+                <div class="email-body">
+Hi [FirstName],
+
+Just wanted to follow up on the report I sent about [Website].
+
+I know you're busy, but the issues I found could be costing you:
+
+📉 Slower load times = Lost visitors (53% leave if > 3 seconds)
+🔒 Security gaps = Risk of data breaches
+📱 Poor mobile performance = Lost mobile traffic
+
+The good news? Most of these can be fixed in a few days.
+
+Here's that report again if you missed it: [PDF Link]
+
+Want me to help fix these? We can start this week.
+
+Best,
+Arslan
+                </div>
+            </div>
+
+            <div class="email-template">
+                <div class="email-subject">Email 3: Case Study (Day 7)</div>
+                <div style="margin-top: 10px; font-weight: 600;">Subject: "How we helped [Similar Company]"</div>
+                <div class="email-body">
+Hi [FirstName],
+
+I wanted to share a quick win from this week.
+
+We helped [Similar Company] in [Industry] fix similar issues to what I found on [Website]:
+
+Results:
+✓ 65% faster load times
+✓ Security vulnerabilities patched
+✓ SEO score improved from 62 to 91
+
+Total time: 3 days.
+
+Your site has even more potential - the report I sent shows exactly what we can improve: [PDF Link]
+
+Want to chat about getting similar results?
+
+Best,
+Arslan
+                </div>
+            </div>
+
+            <div class="email-template">
+                <div class="email-subject">Email 4: Breakup Email (Day 14)</div>
+                <div style="margin-top: 10px; font-weight: 600;">Subject: "Last email from me about [Website]"</div>
+                <div class="email-body">
+Hi [FirstName],
+
+I'll make this my last email - I know your inbox is probably flooded!
+
+I noticed the issues on [Website] haven't been addressed yet:
+- [Critical Issue]
+- [High Priority Issue]
+
+If WordPress maintenance isn't a priority right now, I totally understand.
+
+But if something changes (or if an emergency comes up), we're always here to help: +1 (201) 248-8372
+
+Keep that report handy - might be useful: [PDF Link]
+
+Best of luck with [Company]!
+
+Arslan
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-title">📊 Expected Email Performance</div>
+                <div class="step-content">
+                    <div class="stats-bar">
+                        <div class="stat-row">
+                            <span class="stat-label">Email Open Rate (Target)</span>
+                            <span class="stat-value">&gt; 40%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Email Response Rate (Target)</span>
+                            <span class="stat-value">&gt; 3%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">PDF Download Rate (Target)</span>
+                            <span class="stat-value">&gt; 15%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Consultation Booking Rate</span>
+                            <span class="stat-value">&gt; 10% of responses</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Consultation → Customer</span>
+                            <span class="stat-value">&gt; 30%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="implementation" class="workflow-section">
+            <h2>🚀 Implementation Phases</h2>
+
+            <div class="phase-timeline">
+                <div class="phase">
+                    <div class="phase-title">Phase 1: MVP (Week 1-2)</div>
+                    <div style="opacity: 0.9; margin-bottom: 10px;">Goal: Get basic workflow running</div>
+                    <div class="phase-tasks">
+                        <ul class="checklist">
+                            <li>Set up n8n instance</li>
+                            <li>Get all API keys</li>
+                            <li>Create Google Sheets structure</li>
+                            <li>Build basic workflow (Steps 1-2)</li>
+                            <li>Test with 10 manual domains</li>
+                            <li>Verify email finding works</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 10px; font-weight: 600;">✅ Output: Can find emails for WordPress sites</div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-title">Phase 2: Analysis & PDF (Week 2-3)</div>
+                    <div style="opacity: 0.9; margin-bottom: 10px;">Goal: Generate reports</div>
+                    <div class="phase-tasks">
+                        <ul class="checklist">
+                            <li>Add PageSpeed API integration</li>
+                            <li>Add security checks</li>
+                            <li>Build scoring algorithm</li>
+                            <li>Create HTML template</li>
+                            <li>Set up PDF generation</li>
+                            <li>Upload to Google Drive</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 10px; font-weight: 600;">✅ Output: Can generate PDF reports for sites</div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-title">Phase 3: Email Automation (Week 3-4)</div>
+                    <div style="opacity: 0.9; margin-bottom: 10px;">Goal: Automate outreach</div>
+                    <div class="phase-tasks">
+                        <ul class="checklist">
+                            <li>Create email templates</li>
+                            <li>Set up Gmail/SMTP</li>
+                            <li>Build email sequence</li>
+                            <li>Add delay logic</li>
+                            <li>Test with small batch (10 emails)</li>
+                            <li>Monitor deliverability</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 10px; font-weight: 600;">✅ Output: Can send automated email sequences</div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-title">Phase 4: Monitoring & Optimization (Week 4+)</div>
+                    <div style="opacity: 0.9; margin-bottom: 10px;">Goal: Track and improve</div>
+                    <div class="phase-tasks">
+                        <ul class="checklist">
+                            <li>Add response monitoring</li>
+                            <li>Build tracking dashboard</li>
+                            <li>Set up Slack notifications</li>
+                            <li>A/B test email templates</li>
+                            <li>Optimize scoring algorithm</li>
+                            <li>Scale to 50+ daily</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 10px; font-weight: 600;">✅ Output: Self-running lead generation machine</div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-title">🔧 Required API Keys & Services</div>
+                <div class="step-content">
+                    <h4>Required (Free Tiers Available):</h4>
+                    <ul class="checklist">
+                        <li>BuiltWith API key OR Wappalyzer</li>
+                        <li>Hunter.io API key (free tier: 50/month)</li>
+                        <li>Google Cloud API key (PageSpeed Insights)</li>
+                        <li>Gmail API credentials OR SMTP setup</li>
+                        <li>Google Sheets API credentials</li>
+                        <li>Google Drive API credentials</li>
+                    </ul>
+
+                    <h4 style="margin-top: 20px;">Optional (But Recommended):</h4>
+                    <ul class="checklist">
+                        <li>Clearbit API key (company data)</li>
+                        <li>PDFShift API key (250 free/month)</li>
+                        <li>Slack webhook (for notifications)</li>
+                        <li>Instantly.ai account (better deliverability)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-title">⚡ Technical Requirements</div>
+                <div class="step-content">
+                    <h4>n8n Installation:</h4>
+                    <ul class="checklist">
+                        <li>Install n8n (Docker or npm)</li>
+                        <li>Set up n8n with database (SQLite or PostgreSQL)</li>
+                        <li>Configure environment variables</li>
+                        <li>Enable webhook access (if needed)</li>
+                    </ul>
+
+                    <h4 style="margin-top: 20px;">Server Requirements:</h4>
+                    <ul class="checklist">
+                        <li>Linux VPS or local machine</li>
+                        <li>2GB RAM minimum</li>
+                        <li>10GB storage</li>
+                        <li>Stable internet connection</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="#overview" class="btn-primary" onclick="showTab('overview'); return false;">🎯 Back to Overview</a>
+            </div>
+        </div>
+
+        <footer>
+            <h3 style="color: #1e3a8a; margin-bottom: 15px;">Ready to Implement?</h3>
+            <p style="color: #64748b; margin-bottom: 20px;">This automation will save you 20+ hours per week and generate consistent qualified leads on autopilot.</p>
+            <button class="btn-primary" onclick="alert('Start by setting up your n8n instance and gathering the required API keys. Follow Phase 1 in the Implementation tab!')">🚀 Get Started Now</button>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #94a3b8;">
+                <p>© 2025 Vimsy - Automated Lead Generation System</p>
+                <p style="margin-top: 5px;">Expected Output: 50+ qualified leads per week | Cost: $0-50/month</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.workflow-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show selected section
+            const selectedSection = document.getElementById(tabName);
+            if (selectedSection) {
+                selectedSection.classList.add('active');
+            }
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Add smooth scrolling for all links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.step-card, .api-card, .metric-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Simulate live metrics counter
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value + (element.dataset.suffix || '');
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.metric-value').forEach(el => {
+                const text = el.textContent;
+                const match = text.match(/\d+/);
+                if (match) {
+                    const value = parseInt(match[0]);
+                    el.dataset.suffix = text.replace(match[0], '');
+                    el.textContent = '0';
+                    setTimeout(() => {
+                        animateValue(el, 0, value, 2000);
+                    }, 500);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
