@@ -124,6 +124,13 @@ export const api = {
   resetPrompt: () =>
     request<any>('/settings/reset-prompt', { method: 'POST' }),
 
+  // WordPress Analysis
+  wpAnalyzeSites: (siteIds: number[]) =>
+    request<any>('/sites/wp-analyze', {
+      method: 'POST',
+      body: JSON.stringify({ siteIds }),
+    }),
+
   // Batch site operations
   batchDeleteSites: (siteIds: number[]) =>
     request<any>('/sites/batch-delete', {

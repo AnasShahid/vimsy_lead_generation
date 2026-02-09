@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import type { SiteFilterParams } from '@vimsy/shared';
-import { listSites, getSiteById, deleteSite, getAllSitesForExport, batchDeleteSites, batchUpdateSites } from '../db/queries/sites';
+import { listSites, getSiteById, deleteSite, getAllSitesForExport, batchDeleteSites, batchUpdateSites, upsertSite } from '../db/queries/sites';
 import { analyzeSites, analyzeSingleSite } from '../services/ai-analyzer';
+import { detectWordPress } from '../services/wordpress-detector';
 
 export const sitesRoutes = Router();
 
@@ -64,6 +65,50 @@ sitesRoutes.post('/batch-update', (req: Request, res: Response) => {
     }
     const updated = batchUpdateSites(siteIds, updates);
     return res.json({ success: true, data: { updated } });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/sites/wp-analyze - Run WordPress detection on selected sites
+sitesRoutes.post('/wp-analyze', async (req: Request, res: Response) => {
+  try {
+    const { siteIds } = req.body;
+    if (!Array.isArray(siteIds) || siteIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Provide a non-empty siteIds array' });
+    }
+
+    const results: { id: number; domain: string; is_wordpress: boolean; error?: string }[] = [];
+
+    for (const id of siteIds) {
+      const site = getSiteById(id);
+      if (!site) continue;
+
+      try {
+        const wpResult = await detectWordPress(site.url);
+        upsertSite({
+          url: site.url,
+          domain: site.domain,
+          is_wordpress: wpResult.is_wordpress,
+          wp_version: wpResult.wp_version,
+          detected_theme: wpResult.detected_theme,
+          detected_plugins: wpResult.detected_plugins.join(', '),
+          http_status_code: wpResult.http_status_code,
+          ssl_valid: wpResult.ssl_valid,
+          response_time_ms: wpResult.response_time_ms,
+          page_title: wpResult.page_title,
+          meta_description: wpResult.meta_description,
+          has_contact_page: wpResult.has_contact_page,
+          contact_page_url: wpResult.contact_page_url,
+          status: wpResult.http_status_code && wpResult.http_status_code < 400 ? 'active' : 'error',
+        });
+        results.push({ id, domain: site.domain, is_wordpress: wpResult.is_wordpress });
+      } catch (err: any) {
+        results.push({ id, domain: site.domain, is_wordpress: false, error: err.message });
+      }
+    }
+
+    return res.json({ success: true, data: { analyzed: results.length, results } });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

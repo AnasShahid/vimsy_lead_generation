@@ -6,7 +6,7 @@
 
 export type JobType = 'discovery' | 'enrichment' | 'analysis' | 'report' | 'outreach';
 export type JobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-export type DiscoveryProvider = 'manual' | 'directory' | 'builtwith' | 'wappalyzer' | 'hunter';
+export type DiscoveryProvider = 'manual' | 'builtwith' | 'wappalyzer' | 'hunter';
 export type SiteStatus = 'pending' | 'active' | 'inactive' | 'error';
 export type PipelineStage = 'discovered' | 'enriched' | 'analyzed' | 'reported' | 'contacted';
 export type LeadPriority = 'hot' | 'warm' | 'cold';
@@ -121,12 +121,6 @@ export interface ManualProviderConfig {
   urls: string[];
 }
 
-export interface DirectoryProviderConfig {
-  directories: string[];  // URLs of directories to scrape
-  maxPages: number;
-  industry?: string;
-}
-
 export interface BuiltWithProviderConfig {
   apiKey: string;
   technology: string;  // e.g. 'WordPress'
@@ -139,24 +133,66 @@ export interface WappalyzerProviderConfig {
   urls: string[];  // URLs to check
 }
 
-export interface HunterLeadsProviderConfig {
+export interface HunterDiscoverProviderConfig {
   apiKey: string;
-  listId: number;  // selected lead list ID
+  filters: HunterDiscoverFilters;
+  page?: number;       // UI page number (1-indexed), translated to offset
+  limit?: number;      // items per page, default 100
+}
+
+export interface HunterDiscoverFilters {
+  query?: string;
+  similar_to?: string[];
+  headquarters_location?: {
+    include?: Array<{ continent?: string; business_region?: string; country?: string; state?: string; city?: string }>;
+    exclude?: Array<{ continent?: string; business_region?: string; country?: string; state?: string; city?: string }>;
+  };
+  industry?: {
+    include?: string[];
+    exclude?: string[];
+  };
+  headcount?: string[];
+  company_type?: {
+    include?: string[];
+    exclude?: string[];
+  };
+  year_founded?: {
+    from?: number;
+    to?: number;
+  };
+  keywords?: {
+    include?: string[];
+    exclude?: string[];
+    match?: 'any' | 'all';
+  };
+  technology?: {
+    include?: string[];
+    exclude?: string[];
+    match?: 'any' | 'all';
+  };
+  funding?: {
+    series?: string[];
+    amount?: { from?: number; to?: number };
+    date?: { from?: string; to?: string };
+  };
 }
 
 export type ProviderConfig =
   | ManualProviderConfig
-  | DirectoryProviderConfig
   | BuiltWithProviderConfig
   | WappalyzerProviderConfig
-  | HunterLeadsProviderConfig;
+  | HunterDiscoverProviderConfig;
 
-// --- Hunter.io Lead List (for list selection UI) ---
+// --- Hunter.io Discover Response ---
 
-export interface HunterLeadList {
-  id: number;
-  name: string;
-  leads_count: number;
+export interface HunterDiscoverCompany {
+  domain: string;
+  organization: string;
+  emails_count: {
+    personal: number;
+    generic: number;
+    total: number;
+  };
 }
 
 // --- WordPress Detection ---

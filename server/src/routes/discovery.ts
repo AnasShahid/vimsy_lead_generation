@@ -5,11 +5,10 @@ import { createJob, getJobById, listJobs, updateJobStatus } from '../db/queries/
 import { getProvider } from '../services/discovery';
 import { cancelJob } from '../workers/discovery-worker';
 import { detectWordPress } from '../services/wordpress-detector';
-import { fetchHunterLeadLists } from '../services/discovery/providers/hunter-leads';
 
 export const discoveryRoutes = Router();
 
-const VALID_PROVIDERS: DiscoveryProvider[] = ['manual', 'directory', 'builtwith', 'wappalyzer', 'hunter'];
+const VALID_PROVIDERS: DiscoveryProvider[] = ['manual', 'builtwith', 'wappalyzer', 'hunter'];
 
 // POST /api/discovery/jobs - Start a new discovery job
 discoveryRoutes.post('/jobs', (req: Request, res: Response) => {
@@ -95,21 +94,6 @@ discoveryRoutes.delete('/jobs/:id', (req: Request, res: Response) => {
 
     updateJobStatus(job.id, 'cancelled');
     return res.json({ success: true, data: { id: job.id, status: 'cancelled' } });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// GET /api/discovery/hunter/lists - Fetch Hunter.io lead lists for UI dropdown
-discoveryRoutes.get('/hunter/lists', async (req: Request, res: Response) => {
-  try {
-    const apiKey = req.query.apiKey as string;
-    if (!apiKey || apiKey.trim().length === 0) {
-      return res.status(400).json({ success: false, error: 'Hunter.io API key is required' });
-    }
-
-    const lists = await fetchHunterLeadLists(apiKey.trim());
-    return res.json({ success: true, data: lists });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

@@ -12,12 +12,12 @@
 ████████████████████ 100% (Phase 1)
 ```
 
-**Last activity:** 2026-02-09 - OpenRouter AI integration, Settings screen, Site selection & Batch actions implemented
+**Last activity:** 2026-02-09 - Hunter.io Discover API rewrite, Directories tab removed, Manual WP analysis on selected sites
 
 ## Session Continuity
 
 **Last session:** 2026-02-09
-**Stopped at:** OpenRouter + Settings + Batch Actions complete
+**Stopped at:** All discovery improvements complete (Hunter Discover, WP Analyze, batch actions, settings)
 **Resume file:** None
 **Next action:** Plan Phase 2 (Contact Enrichment)
 
@@ -32,6 +32,9 @@
 | Instantly.ai for email sending | Dedicated cold email platform with warmup and deliverability | 2026-02-07 | 5 |
 | Auto-qualify + manual review hybrid | Score <40 auto-enters pipeline, 40-75 reviewed by team | 2026-02-07 | 3 |
 | Docker-ready from start | Easy deployment to any server | 2026-02-07 | — |
+| OpenRouter over direct OpenAI | Single API key for GPT-4o, Gemini, Claude; model stored in DB | 2026-02-09 | 1 |
+| Hunter.io Discover over Lead Lists | Discover API finds companies by filters; lead lists only return contacts | 2026-02-09 | 1 |
+| Remove Directories provider | Not useful for Vimsy lead gen workflow | 2026-02-09 | 1 |
 
 ## Blockers & Concerns
 
@@ -47,15 +50,21 @@ None — all current todos complete.
 |------|------|-----------|
 | OpenRouter AI Analysis + Settings Screen | ai-analysis, settings | 2026-02-09 |
 | Discovery Site Selection & Batch Actions | discovery, ui | 2026-02-09 |
+| Rewrite Hunter.io to Discover API with Filters | discovery, hunter | 2026-02-09 |
+| Remove Directories Tab | discovery, ui | 2026-02-09 |
+| Manual WordPress Analysis on Selected Sites | discovery, wp-detection | 2026-02-09 |
 | Hunter.io Lead Import Provider | discovery | 2026-02-07 |
 | AI-Analyzed Discovery Output Format | ai-analysis | 2026-02-07 |
 
 ## Context Notes
 
-- Step 1 (WordPress Discovery) is fully built with 5 providers — Phase 1 improves it
-- AI analysis now uses OpenRouter (supports OpenAI, Gemini, Claude) with DB-persisted model + prompt
+- Discovery providers: manual, hunter (Discover API), builtwith, wappalyzer (directory removed)
+- Hunter.io tab uses POST /discover with filters: country, industry, headcount, company_type, technology, keywords, year_founded, funding, similar_to
+- AI analysis uses OpenRouter (supports OpenAI, Gemini, Claude) with DB-persisted model + prompt
 - Settings page at /settings with model dropdown and prompt editor
-- Discovery table has checkbox selection with batch AI analyze, edit, delete, and pipeline advancement
+- Discovery table has checkbox selection with batch: AI Analyze, WP Analyze, Edit, Delete, Move to Enrichment
+- WP Analyze runs WordPress detection on selected sites (is_wordpress, version, theme, plugins, SSL, response time)
+- fetchPost utility added to http.ts for POST requests (used by Hunter Discover)
 - The prototype.html contains the original n8n workflow specification
 
 ---

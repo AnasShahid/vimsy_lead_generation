@@ -87,6 +87,67 @@ export async function fetchUrl(
   });
 }
 
+export async function fetchPost(
+  url: string,
+  body: string,
+  options: { timeout?: number; headers?: Record<string, string> } = {}
+): Promise<HttpResponse> {
+  const { timeout = 30000, headers: extraHeaders = {} } = options;
+
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const parsed = new URL(url);
+    const isHttps = parsed.protocol === 'https:';
+    const client = isHttps ? https : http;
+
+    const reqOptions = {
+      method: 'POST',
+      hostname: parsed.hostname,
+      port: parsed.port || (isHttps ? 443 : 80),
+      path: parsed.pathname + parsed.search,
+      timeout,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'User-Agent': 'Mozilla/5.0 (compatible; VimsyBot/1.0)',
+        ...extraHeaders,
+      },
+    };
+
+    const req = client.request(reqOptions, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        const responseTimeMs = Date.now() - start;
+        const responseBody = Buffer.concat(chunks).toString('utf-8');
+
+        let sslValid = false;
+        if (isHttps) {
+          const tlsSocket = (res.socket as any);
+          sslValid = tlsSocket?.authorized !== false;
+        }
+
+        resolve({
+          statusCode: res.statusCode || 0,
+          headers: res.headers as Record<string, string | string[] | undefined>,
+          body: responseBody,
+          responseTimeMs,
+          sslValid,
+        });
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error(`Request timed out after ${timeout}ms`));
+    });
+
+    req.write(body);
+    req.end();
+  });
+}
+
 export function normalizeUrl(input: string): string {
   let url = input.trim();
   if (!url.match(/^https?:\/\//i)) {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ExternalLink, Check, X, Sparkles, Trash2, Edit3, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { ExternalLink, Check, X, Sparkles, Trash2, Edit3, ArrowRight, ChevronUp, ChevronDown, Globe } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Site {
@@ -76,6 +76,7 @@ export function SiteResultsTable({
 }: SiteResultsTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [analyzing, setAnalyzing] = useState(false);
+  const [wpAnalyzing, setWpAnalyzing] = useState(false);
   const [showBatchEdit, setShowBatchEdit] = useState(false);
   const [batchPriority, setBatchPriority] = useState('');
   const [batchOutreach, setBatchOutreach] = useState('');
@@ -126,6 +127,20 @@ export function SiteResultsTable({
       onRefresh?.();
     } catch (err: any) {
       alert(`Delete failed: ${err.message}`);
+    }
+  };
+
+  const handleWpAnalyze = async () => {
+    const ids = selectedArray.length > 0 ? selectedArray : sites.map(s => s.id);
+    if (ids.length === 0) return;
+    setWpAnalyzing(true);
+    try {
+      await api.wpAnalyzeSites(ids);
+      onRefresh?.();
+    } catch (err: any) {
+      alert(`WP Analysis failed: ${err.message}`);
+    } finally {
+      setWpAnalyzing(false);
     }
   };
 
@@ -184,6 +199,14 @@ export function SiteResultsTable({
               >
                 <Sparkles size={12} />
                 {analyzing ? 'Analyzing...' : 'AI Analyze'}
+              </button>
+              <button
+                onClick={handleWpAnalyze}
+                disabled={wpAnalyzing}
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 disabled:opacity-50"
+              >
+                <Globe size={12} />
+                {wpAnalyzing ? 'Checking...' : 'WP Analyze'}
               </button>
               <button
                 onClick={() => setShowBatchEdit(!showBatchEdit)}

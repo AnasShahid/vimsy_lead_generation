@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Header } from '../components/layout/Header';
 import { ManualInput } from '../components/discovery/ManualInput';
-import { DirectorySearchForm } from '../components/discovery/DirectorySearchForm';
 import { BuiltWithForm } from '../components/discovery/BuiltWithForm';
 import { WappalyzerForm } from '../components/discovery/WappalyzerForm';
 import { DiscoveryJobList } from '../components/discovery/DiscoveryJobList';
@@ -10,15 +9,14 @@ import { CSVImport } from '../components/shared/CSVImport';
 import { CSVExport } from '../components/shared/CSVExport';
 import { usePolling } from '../hooks/usePolling';
 import { api } from '../lib/api';
-import { HunterLeadsForm } from '../components/discovery/HunterLeadsForm';
-import { Search, FolderOpen, Zap, Radar, UserSearch, FileSpreadsheet, ChevronDown, ChevronRight } from 'lucide-react';
+import { HunterDiscoverForm } from '../components/discovery/HunterDiscoverForm';
+import { Search, Zap, Radar, UserSearch, FileSpreadsheet, ChevronDown, ChevronRight } from 'lucide-react';
 
-type ProviderTab = 'manual' | 'hunter' | 'directory' | 'builtwith' | 'wappalyzer' | 'import' | 'import-enriched';
+type ProviderTab = 'manual' | 'hunter' | 'builtwith' | 'wappalyzer' | 'import' | 'import-enriched';
 
 const TABS: { key: ProviderTab; label: string; icon: React.ReactNode }[] = [
   { key: 'manual', label: 'Manual URLs', icon: <Search size={16} /> },
-  { key: 'hunter', label: 'Hunter.io Leads', icon: <UserSearch size={16} /> },
-  { key: 'directory', label: 'Directories', icon: <FolderOpen size={16} /> },
+  { key: 'hunter', label: 'Hunter.io Discover', icon: <UserSearch size={16} /> },
   { key: 'builtwith', label: 'BuiltWith', icon: <Zap size={16} /> },
   { key: 'wappalyzer', label: 'Wappalyzer', icon: <Radar size={16} /> },
   { key: 'import', label: 'Import CSV', icon: <Search size={16} /> },
@@ -203,14 +201,8 @@ export function DiscoveryPage() {
               />
             )}
             {activeTab === 'hunter' && (
-              <HunterLeadsForm
+              <HunterDiscoverForm
                 onSubmit={config => handleCreateJob('hunter', config)}
-                loading={submitting}
-              />
-            )}
-            {activeTab === 'directory' && (
-              <DirectorySearchForm
-                onSubmit={config => handleCreateJob('directory', config)}
                 loading={submitting}
               />
             )}
