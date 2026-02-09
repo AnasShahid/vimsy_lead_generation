@@ -37,11 +37,18 @@
 
 None yet.
 
+## Pending Todos
+
+| Todo | Area | Priority |
+|------|------|----------|
+| OpenRouter AI Analysis + Settings Screen | ai-analysis, settings | High |
+| Discovery Site Selection & Batch Actions | discovery, ui | High |
+
 ## Context Notes
 
 - Step 1 (WordPress Discovery) is fully built with 5 providers — Phase 1 improves it
-- Two pending todos captured: Hunter.io lead import provider, AI-analyzed output format
-- All source files are untracked (not yet committed to git)
+- Two original todos captured: Hunter.io lead import provider, AI-analyzed output format (both addressed in Phase 1)
+- Two new todos added 2026-02-09: OpenRouter/settings screen, site selection/batch actions
 - The prototype.html contains the original n8n workflow specification
 
 ---

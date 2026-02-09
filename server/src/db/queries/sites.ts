@@ -215,6 +215,42 @@ export function getAllSitesForExport(filters?: Partial<SiteFilterParams>): Site[
   return rows.map(normalizeSiteRow);
 }
 
+export function batchDeleteSites(ids: number[]): number {
+  const db = getDb();
+  if (ids.length === 0) return 0;
+  const placeholders = ids.map(() => '?').join(',');
+  const result = db.prepare(`DELETE FROM sites WHERE id IN (${placeholders})`).run(...ids);
+  return result.changes;
+}
+
+export function batchUpdateSites(ids: number[], updates: Record<string, any>): number {
+  const db = getDb();
+  if (ids.length === 0) return 0;
+
+  const allowedFields = ['priority', 'outreach_status', 'pipeline_stage', 'notes', 'company_name', 'industry_segment'];
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, value] of Object.entries(updates)) {
+    if (allowedFields.includes(key)) {
+      fields.push(`${key} = ?`);
+      values.push(value);
+    }
+  }
+
+  if (fields.length === 0) return 0;
+
+  fields.push("updated_at = datetime('now')");
+  const placeholders = ids.map(() => '?').join(',');
+  values.push(...ids);
+
+  const result = db.prepare(
+    `UPDATE sites SET ${fields.join(', ')} WHERE id IN (${placeholders})`
+  ).run(...values);
+
+  return result.changes;
+}
+
 function normalizeSiteRow(row: any): Site {
   return {
     ...row,

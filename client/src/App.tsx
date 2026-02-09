@@ -7,6 +7,7 @@ import { AnalysisPage } from './pages/AnalysisPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { OutreachPage } from './pages/OutreachPage';
 import { TrackingPage } from './pages/TrackingPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/outreach" element={<OutreachPage />} />
         <Route path="/tracking" element={<TrackingPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>
   );

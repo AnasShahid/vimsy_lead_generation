@@ -1,23 +1,7 @@
 import OpenAI from 'openai';
 import { getSiteById, upsertSite } from '../db/queries/sites';
+import { getAIModel, getAIPrompt } from '../db/queries/settings';
 import type { Site, LeadPriority, ProgressCallback } from '@vimsy/shared';
-
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
-
-const SYSTEM_PROMPT = `You are analyzing websites for Vimsy, a WordPress maintenance and support service.
-Vimsy targets businesses that:
-- Run WordPress sites but lack dedicated dev teams
-- Depend on their website for revenue (e-commerce, lead gen, bookings)
-- Are small-to-medium businesses in AU, US, UK, NZ, CA
-
-For each site provided, return a JSON array where each element has:
-- "company_name": string (infer from domain/page title)
-- "industry_segment": string (e.g., "E-commerce (Food)", "Professional Services", "Healthcare")
-- "ai_fit_reasoning": string (2-3 sentences explaining fit for Vimsy's WordPress maintenance services)
-- "priority": "hot" | "warm" | "cold" (hot = strong fit, likely needs help; warm = moderate fit; cold = weak fit)
-- "country": string (2-letter code inferred from TLD: .com.au→AU, .co.uk→UK, .co.nz→NZ, .ca→CA, otherwise "US")
-
-Return ONLY valid JSON. No markdown, no explanation.`;
 
 function buildSiteContext(site: Site): string {
   const parts = [
@@ -33,12 +17,19 @@ function buildSiteContext(site: Site): string {
   return parts.filter(Boolean).join('\n');
 }
 
-function getOpenAIClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
+function getOpenRouterClient(): OpenAI {
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY environment variable is required for AI analysis');
+    throw new Error('OPENROUTER_API_KEY environment variable is required for AI analysis');
   }
-  return new OpenAI({ apiKey });
+  return new OpenAI({
+    apiKey,
+    baseURL: 'https://openrouter.ai/api/v1',
+    defaultHeaders: {
+      'HTTP-Referer': 'https://vimsy.com',
+      'X-Title': 'Vimsy Lead Gen',
+    },
+  });
 }
 
 /**
@@ -60,7 +51,9 @@ export async function analyzeSites(
   siteIds: number[],
   onProgress?: ProgressCallback
 ): Promise<void> {
-  const client = getOpenAIClient();
+  const client = getOpenRouterClient();
+  const model = getAIModel();
+  const prompt = getAIPrompt();
   const BATCH_SIZE = 5;
 
   for (let i = 0; i < siteIds.length; i += BATCH_SIZE) {
@@ -80,9 +73,9 @@ export async function analyzeSites(
 
     try {
       const response = await client.chat.completions.create({
-        model: AI_MODEL,
+        model,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: prompt },
           { role: 'user', content: userMessage },
         ],
         temperature: 0.3,

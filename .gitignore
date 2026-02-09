@@ -26,7 +26,8 @@ develop-eggs/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python lib (not client/src/lib)
+/lib/
 lib64/
 parts/
 sdist/

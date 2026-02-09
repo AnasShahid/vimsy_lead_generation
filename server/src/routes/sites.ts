@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import type { SiteFilterParams } from '@vimsy/shared';
-import { listSites, getSiteById, deleteSite, getAllSitesForExport } from '../db/queries/sites';
+import { listSites, getSiteById, deleteSite, getAllSitesForExport, batchDeleteSites, batchUpdateSites } from '../db/queries/sites';
 import { analyzeSites, analyzeSingleSite } from '../services/ai-analyzer';
 
 export const sitesRoutes = Router();
@@ -33,6 +33,37 @@ sitesRoutes.get('/', (req: Request, res: Response) => {
       page: filters.page,
       pageSize: filters.pageSize,
     });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/sites/batch-delete - Delete multiple sites
+sitesRoutes.post('/batch-delete', (req: Request, res: Response) => {
+  try {
+    const { siteIds } = req.body;
+    if (!Array.isArray(siteIds) || siteIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Provide a non-empty siteIds array' });
+    }
+    const deleted = batchDeleteSites(siteIds);
+    return res.json({ success: true, data: { deleted } });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/sites/batch-update - Update multiple sites
+sitesRoutes.post('/batch-update', (req: Request, res: Response) => {
+  try {
+    const { siteIds, updates } = req.body;
+    if (!Array.isArray(siteIds) || siteIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Provide a non-empty siteIds array' });
+    }
+    if (!updates || typeof updates !== 'object') {
+      return res.status(400).json({ success: false, error: 'Provide an updates object' });
+    }
+    const updated = batchUpdateSites(siteIds, updates);
+    return res.json({ success: true, data: { updated } });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

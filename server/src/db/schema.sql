@@ -48,6 +48,12 @@ CREATE TABLE IF NOT EXISTS sites (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain);
 CREATE INDEX IF NOT EXISTS idx_sites_is_wordpress ON sites(is_wordpress);
 CREATE INDEX IF NOT EXISTS idx_sites_pipeline_stage ON sites(pipeline_stage);
