@@ -8,6 +8,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@openrouter/sdk": "^0.8.0",
     "@vimsy/shared": "1.0.0",
     "better-sqlite3": "^11.7.0",
     "cheerio": "^1.0.0",
@@ -18,8 +19,7 @@
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "uuid": "^9.0.0",
-    "xlsx": "^0.18.5",
-    "openai": "^4.28.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.8",

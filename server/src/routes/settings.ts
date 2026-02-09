@@ -5,12 +5,12 @@ export const settingsRoutes = Router();
 
 // Available AI models for the dropdown
 const AVAILABLE_MODELS = [
-  { id: 'openai/gpt-4o', label: 'OpenAI GPT-4o', provider: 'OpenAI', tier: 'flagship' },
-  { id: 'openai/gpt-4o-mini', label: 'OpenAI GPT-4o Mini', provider: 'OpenAI', tier: 'fast' },
+  { id: 'openai/gpt-5.2', label: 'OpenAI GPT-5.2', provider: 'OpenAI', tier: 'flagship' },
+  { id: 'openai/gpt-5-mini', label: 'OpenAI GPT-5 Mini', provider: 'OpenAI', tier: 'fast' },
   { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google', tier: 'flagship' },
-  { id: 'google/gemini-2.0-flash', label: 'Gemini 2.0 Flash', provider: 'Google', tier: 'fast' },
-  { id: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', provider: 'Anthropic', tier: 'flagship' },
-  { id: 'anthropic/claude-3-5-haiku', label: 'Claude 3.5 Haiku', provider: 'Anthropic', tier: 'fast' },
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', tier: 'fast' },
+  { id: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5', provider: 'Anthropic', tier: 'flagship' },
+  { id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5', provider: 'Anthropic', tier: 'fast' },
 ];
 
 // GET /api/settings - Get all settings with defaults

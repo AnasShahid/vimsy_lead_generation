@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { OpenRouter } from '@openrouter/sdk';
 import { getSiteById, upsertSite } from '../db/queries/sites';
 import { getAIModel, getAIPrompt } from '../db/queries/settings';
 import type { Site, LeadPriority, ProgressCallback } from '@vimsy/shared';
@@ -17,19 +17,12 @@ function buildSiteContext(site: Site): string {
   return parts.filter(Boolean).join('\n');
 }
 
-function getOpenRouterClient(): OpenAI {
+function getOpenRouterClient(): OpenRouter {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY environment variable is required for AI analysis');
   }
-  return new OpenAI({
-    apiKey,
-    baseURL: 'https://openrouter.ai/api/v1',
-    defaultHeaders: {
-      'HTTP-Referer': 'https://vimsy.com',
-      'X-Title': 'Vimsy Lead Gen',
-    },
-  });
+  return new OpenRouter({ apiKey });
 }
 
 /**
@@ -72,17 +65,22 @@ export async function analyzeSites(
       .join('\n\n');
 
     try {
-      const response = await client.chat.completions.create({
-        model,
-        messages: [
-          { role: 'system', content: prompt },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
+      const response = await client.chat.send({
+        httpReferer: 'https://vimsy.com',
+        xTitle: 'Vimsy Lead Gen',
+        chatGenerationParams: {
+          model,
+          messages: [
+            { role: 'system', content: prompt },
+            { role: 'user', content: userMessage },
+          ],
+          temperature: 0.3,
+          responseFormat: { type: 'json_object' },
+          stream: false,
+        },
       });
 
-      const content = response.choices[0]?.message?.content;
+      const content = (response as any).choices?.[0]?.message?.content;
       if (!content) {
         console.warn('[AI] Empty response for batch starting at index', i);
         continue;
@@ -120,7 +118,8 @@ export async function analyzeSites(
         }
       }
     } catch (err: any) {
-      if (err.status === 429) {
+      const statusCode = err.statusCode || err.status;
+      if (statusCode === 429) {
         console.warn('[AI] Rate limited, waiting 30s...');
         await new Promise(r => setTimeout(r, 30000));
         i -= BATCH_SIZE; // retry this batch
