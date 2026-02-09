@@ -11,7 +11,7 @@ import { CSVExport } from '../components/shared/CSVExport';
 import { usePolling } from '../hooks/usePolling';
 import { api } from '../lib/api';
 import { HunterLeadsForm } from '../components/discovery/HunterLeadsForm';
-import { Search, FolderOpen, Zap, Radar, UserSearch, FileSpreadsheet } from 'lucide-react';
+import { Search, FolderOpen, Zap, Radar, UserSearch, FileSpreadsheet, ChevronDown, ChevronRight } from 'lucide-react';
 
 type ProviderTab = 'manual' | 'hunter' | 'directory' | 'builtwith' | 'wappalyzer' | 'import' | 'import-enriched';
 
@@ -42,6 +42,7 @@ export function DiscoveryPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [jobsExpanded, setJobsExpanded] = useState(false);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -81,6 +82,11 @@ export function DiscoveryPage() {
 
   const hasActiveJobs = jobs.some(j => j.status === 'pending' || j.status === 'running');
   usePolling(() => { fetchJobs(); fetchSites(); }, 2000, hasActiveJobs);
+
+  // Auto-expand jobs when a job is running
+  useEffect(() => {
+    if (hasActiveJobs) setJobsExpanded(true);
+  }, [hasActiveJobs]);
 
   const handleCreateJob = async (provider: string, config: Record<string, unknown>) => {
     setSubmitting(true);
@@ -253,13 +259,34 @@ export function DiscoveryPage() {
           </div>
         </section>
 
-        {/* Jobs Section */}
+        {/* Jobs Section — Collapsible */}
         {jobs.length > 0 && (
-          <section>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">
-              Discovery Jobs ({jobs.length})
-            </h3>
-            <DiscoveryJobList jobs={jobs} onCancel={handleCancelJob} />
+          <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => setJobsExpanded(prev => !prev)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                {jobsExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+                <h3 className="text-sm font-medium text-gray-700">
+                  Discovery Jobs ({jobs.length})
+                </h3>
+                {hasActiveJobs && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                    Running
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-gray-400">
+                {jobsExpanded ? 'Click to collapse' : 'Click to expand'}
+              </span>
+            </button>
+            {jobsExpanded && (
+              <div className="px-4 pb-4">
+                <DiscoveryJobList jobs={jobs} onCancel={handleCancelJob} />
+              </div>
+            )}
           </section>
         )}
 
