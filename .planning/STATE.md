@@ -12,12 +12,12 @@
 ████████████████████ 100% (Phase 1)
 ```
 
-**Last activity:** 2026-02-07 - Phase 1 complete (all 3 plans executed, verified, TypeScript compiles clean)
+**Last activity:** 2026-02-09 - OpenRouter AI integration, Settings screen, Site selection & Batch actions implemented
 
 ## Session Continuity
 
-**Last session:** 2026-02-07
-**Stopped at:** Phase 1 complete
+**Last session:** 2026-02-09
+**Stopped at:** OpenRouter + Settings + Batch Actions complete
 **Resume file:** None
 **Next action:** Plan Phase 2 (Contact Enrichment)
 
@@ -39,16 +39,23 @@ None yet.
 
 ## Pending Todos
 
-| Todo | Area | Priority |
-|------|------|----------|
-| OpenRouter AI Analysis + Settings Screen | ai-analysis, settings | High |
-| Discovery Site Selection & Batch Actions | discovery, ui | High |
+None — all current todos complete.
+
+## Completed Todos
+
+| Todo | Area | Completed |
+|------|------|-----------|
+| OpenRouter AI Analysis + Settings Screen | ai-analysis, settings | 2026-02-09 |
+| Discovery Site Selection & Batch Actions | discovery, ui | 2026-02-09 |
+| Hunter.io Lead Import Provider | discovery | 2026-02-07 |
+| AI-Analyzed Discovery Output Format | ai-analysis | 2026-02-07 |
 
 ## Context Notes
 
 - Step 1 (WordPress Discovery) is fully built with 5 providers — Phase 1 improves it
-- Two original todos captured: Hunter.io lead import provider, AI-analyzed output format (both addressed in Phase 1)
-- Two new todos added 2026-02-09: OpenRouter/settings screen, site selection/batch actions
+- AI analysis now uses OpenRouter (supports OpenAI, Gemini, Claude) with DB-persisted model + prompt
+- Settings page at /settings with model dropdown and prompt editor
+- Discovery table has checkbox selection with batch AI analyze, edit, delete, and pipeline advancement
 - The prototype.html contains the original n8n workflow specification
 
 ---
