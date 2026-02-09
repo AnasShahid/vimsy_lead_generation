@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search } from 'lucide-react';
+import { HUNTER_INDUSTRIES } from '../../data/hunter-industries';
+import { HUNTER_TECHNOLOGIES } from '../../data/hunter-technologies';
 
 // Static data — loaded once from Hunter.io JSON files
 const HEADCOUNT_OPTIONS = [
@@ -128,22 +130,6 @@ export function HunterDiscoverForm({ onSubmit, loading }: HunterDiscoverFormProp
   const [fundingSeries, setFundingSeries] = useState<string[]>([]);
   const [page, setPage] = useState(1);
 
-  // Loaded option lists
-  const [industryOptions, setIndustryOptions] = useState<string[]>([]);
-  const [technologyOptions, setTechnologyOptions] = useState<string[]>([]);
-
-  // Load industries and technologies from Hunter.io
-  useEffect(() => {
-    fetch('https://hunter.io/files/industries.json')
-      .then(r => r.json())
-      .then(data => setIndustryOptions(Array.isArray(data) ? data : []))
-      .catch(() => {});
-
-    fetch('https://hunter.io/files/technologies.json')
-      .then(r => r.json())
-      .then(data => setTechnologyOptions(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,7 +252,7 @@ export function HunterDiscoverForm({ onSubmit, loading }: HunterDiscoverFormProp
         {/* Industry */}
         <MultiSelect
           label="Industry"
-          options={industryOptions}
+          options={HUNTER_INDUSTRIES}
           selected={industries}
           onChange={setIndustries}
           placeholder="Select industries..."
@@ -294,7 +280,7 @@ export function HunterDiscoverForm({ onSubmit, loading }: HunterDiscoverFormProp
         <div>
           <MultiSelect
             label="Technology"
-            options={technologyOptions}
+            options={HUNTER_TECHNOLOGIES}
             selected={technologies}
             onChange={setTechnologies}
             placeholder="Select technologies..."

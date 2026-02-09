@@ -19,10 +19,16 @@ export function upsertSite(site: Partial<Site> & { url: string; domain: string }
       'emails_available_count', 'priority', 'outreach_status', 'notes',
     ] as const;
 
+    const booleanColumns = new Set(['is_wordpress', 'has_contact_page', 'ssl_valid']);
+
     for (const key of updatable) {
       if (site[key] !== undefined) {
         fields.push(`${key} = ?`);
-        values.push(site[key]);
+        let val = site[key];
+        if (booleanColumns.has(key)) {
+          val = val ? 1 : 0;
+        }
+        values.push(val);
       }
     }
 
