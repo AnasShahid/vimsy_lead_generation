@@ -1,8 +1,9 @@
 import type { Job, AnalysisJobConfig } from '@vimsy/shared';
 import { getNextPendingJob, updateJobStatus, updateJobProgress } from '../db/queries/jobs';
-import { getSiteById, batchUpdateSites } from '../db/queries/sites';
+import { batchUpdateSites } from '../db/queries/sites';
 import { createAnalysis, updateAnalysis } from '../db/queries/analyses';
-import { addTag, addTagsBatch } from '../db/queries/tags';
+import { addTag } from '../db/queries/tags';
+import { analyzeSite } from '../services/analysis';
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_CONCURRENT = 5;
@@ -120,10 +121,6 @@ async function runAnalysisJob(job: Job, signal: AbortSignal): Promise<void> {
   console.log(`[Analysis Worker] Job ${job.id}: Completed. ${completedCount} analyzed, ${errorCount} errors out of ${totalSites} sites.`);
 }
 
-/**
- * Analyze a single site. This is a placeholder that will be replaced
- * by the real analysis orchestrator in Plan 2 (03-02).
- */
 async function analyzeSingleSite(
   siteId: number,
   jobId: string,
@@ -131,34 +128,20 @@ async function analyzeSingleSite(
 ): Promise<{ success: boolean; error?: string }> {
   if (signal.aborted) return { success: false, error: 'Cancelled' };
 
-  const site = getSiteById(siteId);
-  if (!site) {
-    return { success: false, error: 'Site not found' };
-  }
-
   // Create analysis record
   const analysis = createAnalysis(siteId, jobId);
 
   try {
-    // TODO: Plan 2 will replace this with real service calls:
-    // 1. PageSpeed Insights
-    // 2. SSL/TLS Analysis
-    // 3. WPScan (if WordPress)
-    // 4. Vulnerability matching
-    // 5. Composite scoring
+    const result = await analyzeSite(siteId, analysis.id);
 
-    // For now, mark as analyzed with placeholder data
-    updateAnalysis(analysis.id, {
-      status: 'completed',
-      analyzed_at: new Date().toISOString(),
-    });
+    if (!result.success) {
+      updateAnalysis(analysis.id, { status: 'error' });
+      return { success: false, error: result.error };
+    }
 
-    console.log(`[Analysis Worker] Site ${siteId} (${site.domain}): analysis placeholder complete`);
     return { success: true };
   } catch (err: any) {
-    updateAnalysis(analysis.id, {
-      status: 'error',
-    });
+    updateAnalysis(analysis.id, { status: 'error' });
     return { success: false, error: err.message };
   }
 }

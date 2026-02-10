@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getAllSettings, getSetting, setSetting, getAIModel, getAIPrompt, DEFAULT_AI_MODEL, DEFAULT_AI_PROMPT } from '../db/queries/settings';
+import { updateVulnerabilityDatabase, getVulnDbStatus } from '../services/analysis/vuln-db-updater';
 
 export const settingsRoutes = Router();
 
@@ -76,6 +77,26 @@ settingsRoutes.post('/reset-prompt', (_req: Request, res: Response) => {
       success: true,
       data: { ai_analysis_prompt: DEFAULT_AI_PROMPT },
     });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/settings/vuln-db/status - Get vulnerability DB status
+settingsRoutes.get('/vuln-db/status', (_req: Request, res: Response) => {
+  try {
+    const status = getVulnDbStatus();
+    return res.json({ success: true, data: status });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/settings/vuln-db/update - Trigger vulnerability DB update
+settingsRoutes.post('/vuln-db/update', async (_req: Request, res: Response) => {
+  try {
+    const result = await updateVulnerabilityDatabase();
+    return res.json({ success: result.success, data: result });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
