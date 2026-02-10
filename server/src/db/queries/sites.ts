@@ -16,7 +16,7 @@ export function upsertSite(site: Partial<Site> & { url: string; domain: string }
       'has_contact_page', 'contact_page_url', 'status', 'http_status_code',
       'ssl_valid', 'response_time_ms', 'meta_description', 'page_title',
       'pipeline_stage', 'company_name', 'industry_segment', 'ai_fit_reasoning',
-      'emails_available_count', 'enrichment_status', 'priority', 'outreach_status', 'notes',
+      'emails_available_count', 'enrichment_status', 'analysis_status', 'priority', 'outreach_status', 'notes',
     ] as const;
 
     const booleanColumns = new Set(['is_wordpress', 'has_contact_page', 'ssl_valid']);
@@ -235,7 +235,7 @@ export function batchUpdateSites(ids: number[], updates: Record<string, any>): n
   const db = getDb();
   if (ids.length === 0) return 0;
 
-  const allowedFields = ['priority', 'outreach_status', 'pipeline_stage', 'enrichment_status', 'notes', 'company_name', 'industry_segment'];
+  const allowedFields = ['priority', 'outreach_status', 'pipeline_stage', 'enrichment_status', 'analysis_status', 'notes', 'company_name', 'industry_segment'];
   const fields: string[] = [];
   const values: any[] = [];
 

@@ -1,0 +1,164 @@
+import type { Job, AnalysisJobConfig } from '@vimsy/shared';
+import { getNextPendingJob, updateJobStatus, updateJobProgress } from '../db/queries/jobs';
+import { getSiteById, batchUpdateSites } from '../db/queries/sites';
+import { createAnalysis, updateAnalysis } from '../db/queries/analyses';
+import { addTag, addTagsBatch } from '../db/queries/tags';
+
+const POLL_INTERVAL_MS = 2000;
+const MAX_CONCURRENT = 5;
+
+let pollTimer: NodeJS.Timeout | null = null;
+const runningJobs = new Map<string, AbortController>();
+
+export function startAnalysisWorker(): void {
+  pollTimer = setInterval(processNextJob, POLL_INTERVAL_MS);
+}
+
+export function stopAnalysisWorker(): void {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  for (const [id, controller] of runningJobs) {
+    controller.abort();
+    updateJobStatus(id, 'cancelled');
+  }
+  runningJobs.clear();
+}
+
+export function cancelAnalysisJob(jobId: string): boolean {
+  const controller = runningJobs.get(jobId);
+  if (controller) {
+    controller.abort();
+    runningJobs.delete(jobId);
+    return true;
+  }
+  return false;
+}
+
+async function processNextJob(): Promise<void> {
+  if (runningJobs.size > 0) return;
+
+  const job = getNextPendingJob('analysis');
+  if (!job) return;
+
+  const controller = new AbortController();
+  runningJobs.set(job.id, controller);
+
+  try {
+    await runAnalysisJob(job, controller.signal);
+  } catch (err: any) {
+    if (controller.signal.aborted) {
+      updateJobStatus(job.id, 'cancelled');
+    } else {
+      updateJobStatus(job.id, 'failed', err.message);
+      console.error(`[Analysis Worker] Job ${job.id} failed: ${err.message}`);
+    }
+  } finally {
+    runningJobs.delete(job.id);
+  }
+}
+
+async function runAnalysisJob(job: Job, signal: AbortSignal): Promise<void> {
+  const config = job.config as unknown as AnalysisJobConfig;
+  if (!config || !config.siteIds || config.siteIds.length === 0) {
+    updateJobStatus(job.id, 'failed', 'No sites specified for analysis');
+    return;
+  }
+
+  updateJobStatus(job.id, 'running');
+
+  const { siteIds } = config;
+  const totalSites = siteIds.length;
+
+  // Mark all sites as analyzing
+  batchUpdateSites(siteIds, { analysis_status: 'analyzing', pipeline_stage: 'analysis' });
+
+  let completedCount = 0;
+  let errorCount = 0;
+
+  // Process in batches of MAX_CONCURRENT
+  for (let batchStart = 0; batchStart < siteIds.length; batchStart += MAX_CONCURRENT) {
+    if (signal.aborted) return;
+
+    const batch = siteIds.slice(batchStart, batchStart + MAX_CONCURRENT);
+
+    const results = await Promise.allSettled(
+      batch.map(siteId => analyzeSingleSite(siteId, job.id, signal))
+    );
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      const siteId = batch[i];
+
+      if (result.status === 'fulfilled') {
+        if (result.value.success) {
+          completedCount++;
+          batchUpdateSites([siteId], { analysis_status: 'analyzed' });
+          addTag(siteId, 'analyzed');
+        } else {
+          errorCount++;
+          batchUpdateSites([siteId], { analysis_status: 'error' });
+          console.error(`[Analysis Worker] Site ${siteId}: ${result.value.error}`);
+        }
+      } else {
+        errorCount++;
+        batchUpdateSites([siteId], { analysis_status: 'error' });
+        console.error(`[Analysis Worker] Site ${siteId} threw: ${result.reason?.message || result.reason}`);
+      }
+    }
+
+    updateJobProgress(job.id, batchStart + batch.length, totalSites);
+  }
+
+  if (errorCount === totalSites) {
+    updateJobStatus(job.id, 'failed', `All ${totalSites} sites failed analysis`);
+  } else {
+    updateJobStatus(job.id, 'completed');
+  }
+
+  console.log(`[Analysis Worker] Job ${job.id}: Completed. ${completedCount} analyzed, ${errorCount} errors out of ${totalSites} sites.`);
+}
+
+/**
+ * Analyze a single site. This is a placeholder that will be replaced
+ * by the real analysis orchestrator in Plan 2 (03-02).
+ */
+async function analyzeSingleSite(
+  siteId: number,
+  jobId: string,
+  signal: AbortSignal
+): Promise<{ success: boolean; error?: string }> {
+  if (signal.aborted) return { success: false, error: 'Cancelled' };
+
+  const site = getSiteById(siteId);
+  if (!site) {
+    return { success: false, error: 'Site not found' };
+  }
+
+  // Create analysis record
+  const analysis = createAnalysis(siteId, jobId);
+
+  try {
+    // TODO: Plan 2 will replace this with real service calls:
+    // 1. PageSpeed Insights
+    // 2. SSL/TLS Analysis
+    // 3. WPScan (if WordPress)
+    // 4. Vulnerability matching
+    // 5. Composite scoring
+
+    // For now, mark as analyzed with placeholder data
+    updateAnalysis(analysis.id, {
+      status: 'completed',
+      analyzed_at: new Date().toISOString(),
+    });
+
+    console.log(`[Analysis Worker] Site ${siteId} (${site.domain}): analysis placeholder complete`);
+    return { success: true };
+  } catch (err: any) {
+    updateAnalysis(analysis.id, {
+      status: 'error',
+    });
+    return { success: false, error: err.message };
+  }
+}

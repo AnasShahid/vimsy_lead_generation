@@ -28,3 +28,16 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+  wpscan:
+    image: wpscanteam/wpscan:latest
+    container_name: vimsy-wpscan
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: unless-stopped
+    environment:
+      - WPSCAN_API_TOKEN=${WPSCAN_API_TOKEN:-}
+    volumes:
+      - wpscan-data:/root/.wpscan
+
+volumes:
+  wpscan-data:

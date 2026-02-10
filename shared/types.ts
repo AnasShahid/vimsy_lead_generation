@@ -8,9 +8,11 @@ export type JobType = 'discovery' | 'enrichment' | 'analysis' | 'report' | 'outr
 export type JobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type DiscoveryProvider = 'manual' | 'builtwith' | 'wappalyzer' | 'hunter';
 export type SiteStatus = 'pending' | 'active' | 'inactive' | 'error';
-export type PipelineStage = 'discovered' | 'enrichment' | 'enriched' | 'analyzed' | 'reported' | 'contacted';
+export type PipelineStage = 'discovered' | 'enrichment' | 'enriched' | 'analysis' | 'analyzed' | 'reported' | 'contacted';
 export type EnrichmentProvider = 'hunter' | 'snov';
 export type EnrichmentStatus = 'pending' | 'enriching' | 'enriched' | 'error';
+export type AnalysisStatus = 'pending' | 'analyzing' | 'analyzed' | 'error';
+export type AnalysisPriority = 'critical' | 'high' | 'medium' | 'low';
 export type LeadPriority = 'hot' | 'warm' | 'cold';
 export type OutreachStatus = 'not_started' | 'in_progress' | 'done';
 
@@ -58,6 +60,7 @@ export interface Site {
   ai_fit_reasoning: string | null;
   emails_available_count: number;
   enrichment_status: EnrichmentStatus | null;
+  analysis_status: AnalysisStatus | null;
   priority: LeadPriority;
   outreach_status: OutreachStatus;
   notes: string | null;
@@ -302,6 +305,82 @@ export interface EnrichmentJobConfig {
   provider: EnrichmentProvider;
   apiKey: string;
   filters: HunterDomainSearchConfig;
+}
+
+// --- Analysis Types ---
+
+export interface AnalysisJobConfig {
+  siteIds: number[];
+}
+
+export interface SiteAnalysis {
+  id: number;
+  site_id: number;
+  analysis_job_id: string | null;
+  status: string;
+  health_score: number | null;
+  priority_classification: AnalysisPriority | null;
+  // Performance (PSI)
+  psi_performance_score: number | null;
+  psi_accessibility_score: number | null;
+  psi_seo_score: number | null;
+  psi_best_practices_score: number | null;
+  psi_raw_data: string | null;
+  // SSL/TLS
+  ssl_valid: boolean | null;
+  ssl_issuer: string | null;
+  ssl_expiry_date: string | null;
+  ssl_days_until_expiry: number | null;
+  ssl_protocol_version: string | null;
+  ssl_cipher: string | null;
+  ssl_chain_valid: boolean | null;
+  ssl_raw_data: string | null;
+  // WordPress (WPScan)
+  wpscan_wp_version: string | null;
+  wpscan_wp_version_status: string | null;
+  wpscan_theme: string | null;
+  wpscan_theme_version: string | null;
+  wpscan_plugins: string | null;
+  wpscan_users: string | null;
+  wpscan_config_backups: string | null;
+  wpscan_db_exports: string | null;
+  wpscan_raw_data: string | null;
+  // Vulnerability matching
+  vulnerabilities_found: number;
+  vulnerability_details: string | null;
+  // Sub-scores
+  security_score: number | null;
+  performance_score: number | null;
+  wp_health_score: number | null;
+  // Timestamps
+  analyzed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SiteTag {
+  id: number;
+  site_id: number;
+  tag: string;
+  assigned_at: string;
+}
+
+export interface WpVulnerability {
+  id: number;
+  title: string | null;
+  cve_id: string | null;
+  cvss_score: number | null;
+  cvss_rating: string | null;
+  software_name: string | null;
+  software_type: string | null;
+  software_slug: string | null;
+  affected_versions: string | null;
+  patched_status: string | null;
+  remediation: string | null;
+  description: string | null;
+  published_date: string | null;
+  last_updated_date: string | null;
+  imported_at: string;
 }
 
 // --- API Response Types ---

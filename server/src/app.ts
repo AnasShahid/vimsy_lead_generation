@@ -6,6 +6,8 @@ import { sitesRoutes } from './routes/sites';
 import { csvRoutes } from './routes/csv';
 import { settingsRoutes } from './routes/settings';
 import { enrichmentRoutes } from './routes/enrichment';
+import { analysisRoutes } from './routes/analysis';
+import { tagRoutes } from './routes/tags';
 
 const app = express();
 
@@ -19,6 +21,8 @@ app.use('/api/sites', sitesRoutes);
 app.use('/api/csv', csvRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/enrichment', enrichmentRoutes);
+app.use('/api/analysis', analysisRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
