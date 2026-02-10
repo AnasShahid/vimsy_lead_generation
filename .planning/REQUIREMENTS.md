@@ -22,8 +22,8 @@
 
 ### Enrichment (Step 2)
 
-- **REQ-016** — Contact data enrichment via Hunter.io (find emails for discovered domains)
-- **REQ-017** — Contact data enrichment via Clearbit (company info, decision-maker contacts)
+- **REQ-016** — Contact data enrichment via Hunter.io (find emails for discovered domains) ✅
+- **REQ-017** — ~~Contact data enrichment via Clearbit~~ → Snov.io (placeholder, deferred)
 
 ### Analysis (Step 3)
 
@@ -85,8 +85,8 @@
 | REQ-013 | 1 | 01-02, 01-03 | ✅ Done |
 | REQ-014 | 1 | 01-02 | ✅ Done |
 | REQ-015 | 1 | 01-03 | ✅ Done |
-| REQ-016 | 2 | TBD | Pending |
-| REQ-017 | 2 | TBD | Pending |
+| REQ-016 | 2 | 02-01, 02-02, 02-03 | ✅ Done |
+| REQ-017 | 2 | — | Deferred (Snov.io placeholder) |
 | REQ-018 | 3 | TBD | Pending |
 | REQ-019 | 3 | TBD | Pending |
 | REQ-020 | 3 | TBD | Pending |

@@ -3,23 +3,23 @@
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** 2 of 6 (Contact Enrichment)
-**Plan:** 0 of 3 (Not started)
-**Status:** Ready to execute
+**Phase:** 2 of 6 (Contact Enrichment) — COMPLETE
+**Plan:** 3 of 3 (All complete)
+**Status:** Phase 2 done, ready for Phase 3
 
 **Progress:**
 ```
-░░░░░░░░░░░░░░░░░░░░ 0% (Phase 2)
+████████████████████ 100% (Phase 2)
 ```
 
-**Last activity:** 2026-02-10 - Created 3 plans for Phase 2 (Contact Enrichment)
+**Last activity:** 2026-02-10 - Phase 2 complete: contacts schema, Hunter.io domain-search, enrichment worker, enrichment page UI
 
 ## Session Continuity
 
 **Last session:** 2026-02-10
-**Stopped at:** Phase 2 plans created, ready to execute
+**Stopped at:** Phase 2 complete
 **Resume file:** None
-**Next action:** Execute Plan 02-01 (Contacts Schema & Hunter.io Domain Search Backend)
+**Next action:** Plan Phase 3 (Technical Analysis & Scoring)
 
 ## Decisions
 
@@ -44,6 +44,10 @@ None yet.
 
 None — all current todos complete.
 
+| Todo | Area | Completed |
+|------|------|-----------|
+| Populate emails_available_count from Hunter Discover | discovery | 2026-02-10 |
+
 ## Completed Todos
 
 | Todo | Area | Completed |
@@ -59,6 +63,11 @@ None — all current todos complete.
 ## Context Notes
 
 - Discovery providers: manual, hunter (Discover API), builtwith, wappalyzer (directory removed)
+- Enrichment: Hunter.io domain-search with seniority/department/type/location filters, background batch jobs
+- Contacts table with UNIQUE(site_id, email) deduplication, supports re-enrichment
+- Pipeline stages: discovered → enrichment → enriched (tracked via pipeline_stage + enrichment_status)
+- Enrichment page: Hunter.io tab (functional) + Snov.io tab (placeholder)
+- Enrichment worker with rate limiting (15 req/sec) and 429 retry logic (30s delay, 3 retries)
 - Hunter.io tab uses POST /discover with filters: country, industry, headcount, company_type, technology, keywords, year_founded, funding, similar_to
 - AI analysis uses OpenRouter (supports OpenAI, Gemini, Claude) with DB-persisted model + prompt
 - Settings page at /settings with model dropdown and prompt editor

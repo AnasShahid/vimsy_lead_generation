@@ -11,7 +11,7 @@
 
 ```
 Phase 1  ██████████ 100%  Discovery Improvements
-Phase 2  ░░░░░░░░░░  0%  Contact Enrichment
+Phase 2  ██████████ 100%  Contact Enrichment
 Phase 3  ░░░░░░░░░░  0%  Technical Analysis & Scoring
 Phase 4  ░░░░░░░░░░  0%  PDF Report Generation
 Phase 5  ░░░░░░░░░░  0%  Cold Email Outreach
@@ -48,11 +48,11 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 **Depends on:** Phase 1
 
 **Success Criteria:**
-- [ ] Hunter.io domain search finds email addresses for discovered domains
-- [ ] Clearbit enrichment adds company info (size, industry, decision-makers)
-- [ ] Enrichment runs as background job with progress tracking
-- [ ] Enriched contact data saved to database and visible in UI
-- [ ] Batch enrichment respects API rate limits and free tier quotas
+- [x] Hunter.io domain search finds email addresses for discovered domains
+- [ ] ~~Clearbit enrichment~~ → Replaced by Snov.io (placeholder, not yet implemented)
+- [x] Enrichment runs as background job with progress tracking
+- [x] Enriched contact data saved to database and visible in UI
+- [x] Batch enrichment respects API rate limits and free tier quotas
 
 **Research flag:** Recommended (Hunter.io domain search API, Clearbit API, rate limit strategies)
 
@@ -158,8 +158,8 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | REQ-013 | 1 | ✅ Done |
 | REQ-014 | 1 | ✅ Done |
 | REQ-015 | 1 | ✅ Done |
-| REQ-016 | 2 | Pending |
-| REQ-017 | 2 | Pending |
+| REQ-016 | 2 | ✅ Done |
+| REQ-017 | 2 | Deferred (Snov.io placeholder) |
 | REQ-018 | 3 | Pending |
 | REQ-019 | 3 | Pending |
 | REQ-020 | 3 | Pending |
