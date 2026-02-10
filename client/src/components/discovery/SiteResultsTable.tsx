@@ -225,8 +225,11 @@ export function SiteResultsTable({
               <button
                 onClick={() => {
                   if (selectedArray.length === 0) return;
-                  api.batchUpdateSites(selectedArray, { pipeline_stage: 'enrichment' })
-                    .then(() => { onRefresh?.(); })
+                  api.moveToEnrichment(selectedArray)
+                    .then(() => {
+                      setSelectedIds(new Set());
+                      onRefresh?.();
+                    })
                     .catch((err: any) => alert(err.message));
                 }}
                 className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"

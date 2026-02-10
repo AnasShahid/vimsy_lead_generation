@@ -58,6 +58,7 @@ export function DiscoveryPage() {
         pageSize,
         sortBy,
         sortOrder,
+        pipeline_stage: 'discovered',
       };
       if (filters.search) params.search = filters.search;
       if (filters.is_wordpress) params.is_wordpress = filters.is_wordpress;

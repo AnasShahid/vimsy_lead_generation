@@ -143,4 +143,37 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ siteIds, updates }),
     }),
+
+  // Enrichment
+  moveToEnrichment: (siteIds: number[]) =>
+    request<any>('/enrichment/move', {
+      method: 'POST',
+      body: JSON.stringify({ siteIds }),
+    }),
+
+  getEnrichmentSites: (params: Record<string, string | number | boolean | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+      .join('&');
+    return request<any>(`/enrichment/sites${query ? `?${query}` : ''}`);
+  },
+
+  getContactsForSite: (siteId: number) =>
+    request<any>(`/enrichment/sites/${siteId}/contacts`),
+
+  createEnrichmentJob: (data: { siteIds: number[]; provider: string; apiKey: string; filters: Record<string, any> }) =>
+    request<any>('/enrichment/jobs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getEnrichmentJobs: () =>
+    request<any>('/enrichment/jobs'),
+
+  getEnrichmentJob: (id: string) =>
+    request<any>(`/enrichment/jobs/${id}`),
+
+  cancelEnrichmentJob: (id: string) =>
+    request<any>(`/enrichment/jobs/${id}`, { method: 'DELETE' }),
 };
