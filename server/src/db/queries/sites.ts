@@ -88,7 +88,7 @@ export function saveSiteFromDetection(
   detection: WPDetectionResult,
   source: DiscoveryProvider,
   jobId: string | null,
-  extra?: { country?: string; industry_guess?: string }
+  extra?: { country?: string; industry_guess?: string; company_name?: string; emails_available_count?: number }
 ): Site {
   const url = new URL(detection.url);
   return upsertSite({
@@ -110,6 +110,8 @@ export function saveSiteFromDetection(
     page_title: detection.page_title,
     country: extra?.country || null,
     industry_guess: extra?.industry_guess || null,
+    company_name: extra?.company_name || null,
+    emails_available_count: extra?.emails_available_count ?? 0,
   });
 }
 

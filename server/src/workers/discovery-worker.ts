@@ -105,6 +105,7 @@ async function runDiscoveryJob(job: Job, signal: AbortSignal): Promise<void> {
 
     try {
       const detection = await detectWordPress(discovered.url);
+      const meta = discovered.metadata || {};
 
       saveSiteFromDetection(
         detection,
@@ -113,6 +114,8 @@ async function runDiscoveryJob(job: Job, signal: AbortSignal): Promise<void> {
         {
           country: extraMeta.country,
           industry_guess: extraMeta.industry || extraMeta.industry_guess,
+          company_name: meta.company_name as string | undefined,
+          emails_available_count: meta.emails_total as number | undefined,
         }
       );
     } catch (err: any) {
