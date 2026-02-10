@@ -3,23 +3,23 @@
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** 3 of 6 (Technical Analysis & Scoring)
-**Plan:** 0 of 3 (Not started)
-**Status:** Ready to execute
+**Phase:** 3 of 6 (Technical Analysis & Scoring) — COMPLETE
+**Plan:** 3 of 3 (All complete)
+**Status:** Phase 3 done, ready for Phase 4
 
 **Progress:**
 ```
-░░░░░░░░░░░░░░░░░░░░ 0% (Phase 3)
+████████████████████ 100% (Phase 3)
 ```
 
-**Last activity:** 2026-02-11 - Created 3 plans for Phase 3 (Technical Analysis & Scoring)
+**Last activity:** 2026-02-11 - Completed Phase 3 (Technical Analysis & Scoring) — all 3 plans executed
 
 ## Session Continuity
 
 **Last session:** 2026-02-11
-**Stopped at:** Phase 3 planned, ready to execute
+**Stopped at:** Phase 3 complete
 **Resume file:** None
-**Next action:** Execute Phase 3 Plan 1 (Analysis Infrastructure & Schema)
+**Next action:** Plan and execute Phase 4 (Reporting & Dashboard)
 
 ## Decisions
 
@@ -65,7 +65,7 @@ None — all current todos complete.
 - Discovery providers: manual, hunter (Discover API), builtwith, wappalyzer (directory removed)
 - Enrichment: Hunter.io domain-search with seniority/department/type/location filters, background batch jobs
 - Contacts table with UNIQUE(site_id, email) deduplication, supports re-enrichment
-- Pipeline stages: discovered → enrichment → enriched (tracked via pipeline_stage + enrichment_status)
+- Pipeline stages: discovered → enrichment → enriched → analysis → analyzed (tracked via pipeline_stage + enrichment_status + analysis_status)
 - Enrichment page: Hunter.io tab (functional) + Snov.io tab (placeholder)
 - Enrichment worker with rate limiting (15 req/sec) and 429 retry logic (30s delay, 3 retries)
 - Hunter.io tab uses POST /discover with filters: country, industry, headcount, company_type, technology, keywords, year_founded, funding, similar_to
@@ -75,6 +75,11 @@ None — all current todos complete.
 - WP Analyze runs WordPress detection on selected sites (is_wordpress, version, theme, plugins, SSL, response time)
 - fetchPost utility added to http.ts for POST requests (used by Hunter Discover)
 - The prototype.html contains the original n8n workflow specification
+- Phase 3: Analysis infrastructure (schema, worker, routes), services (PSI, SSL, WPScan, vuln matcher, scoring), and UI (analysis page, detail drill-down, queue filters, tags, settings vuln DB)
+- Scoring: Security 40%, Performance 30%, WP Health 30%. Priority: critical (<40), high (40-55), medium (55-75), low (>75)
+- WPScan runs via Docker (vimsy-wpscan container), vulnerability data from local OWVD SQLite + API fallback
+- Analysis worker processes 5 sites in parallel per batch via Promise.allSettled
+- Tags system: system-assigned (discovered, enriched, analyzed), stored in site_tags table
 
 ---
 *Auto-updated by GSD workflows*

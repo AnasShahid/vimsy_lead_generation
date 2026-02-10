@@ -176,4 +176,57 @@ export const api = {
 
   cancelEnrichmentJob: (id: string) =>
     request<any>(`/enrichment/jobs/${id}`, { method: 'DELETE' }),
+
+  // Analysis
+  getAnalysisSites: (params: Record<string, string | number | boolean | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+      .join('&');
+    return request<any>(`/analysis/sites${query ? `?${query}` : ''}`);
+  },
+
+  getAnalysisSiteDetail: (id: number) =>
+    request<any>(`/analysis/sites/${id}`),
+
+  createAnalysisJob: (siteIds: number[]) =>
+    request<any>('/analysis/jobs', {
+      method: 'POST',
+      body: JSON.stringify({ siteIds }),
+    }),
+
+  getAnalysisJobs: () =>
+    request<any>('/analysis/jobs'),
+
+  getAnalysisJob: (id: string) =>
+    request<any>(`/analysis/jobs/${id}`),
+
+  cancelAnalysisJob: (id: string) =>
+    request<any>(`/analysis/jobs/${id}`, { method: 'DELETE' }),
+
+  moveToAnalysis: (siteIds: number[]) =>
+    request<any>('/analysis/move', {
+      method: 'POST',
+      body: JSON.stringify({ siteIds }),
+    }),
+
+  reanalyzeSites: (siteIds: number[]) =>
+    request<any>('/analysis/reanalyze', {
+      method: 'POST',
+      body: JSON.stringify({ siteIds }),
+    }),
+
+  // Tags
+  getTagsForSites: (ids: number[]) =>
+    request<any>(`/tags/sites?ids=${ids.join(',')}`),
+
+  getAllTags: () =>
+    request<any>('/tags'),
+
+  // Vulnerability DB
+  getVulnDbStatus: () =>
+    request<any>('/settings/vuln-db/status'),
+
+  updateVulnDb: () =>
+    request<any>('/settings/vuln-db/update', { method: 'POST' }),
 };

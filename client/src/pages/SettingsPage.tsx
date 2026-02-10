@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { api } from '../lib/api';
-import { RotateCcw, Save, Check } from 'lucide-react';
+import { RotateCcw, Save, Check, Shield, Download, Loader2 } from 'lucide-react';
 
 interface AIModel {
   id: string;
@@ -18,17 +18,22 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [vulnDbStatus, setVulnDbStatus] = useState<any>(null);
+  const [vulnDbUpdating, setVulnDbUpdating] = useState(false);
+  const [vulnDbMessage, setVulnDbMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [settingsRes, modelsRes] = await Promise.all([
+        const [settingsRes, modelsRes, vulnRes] = await Promise.all([
           api.getSettings(),
           api.getAIModels(),
+          api.getVulnDbStatus().catch(() => ({ data: null })),
         ]);
         setAiModel(settingsRes.data.ai_model);
         setAiPrompt(settingsRes.data.ai_analysis_prompt);
         setModels(modelsRes.data);
+        if (vulnRes.data) setVulnDbStatus(vulnRes.data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -60,6 +65,25 @@ export function SettingsPage() {
       setAiPrompt(res.data.ai_analysis_prompt);
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  const handleVulnDbUpdate = async () => {
+    setVulnDbUpdating(true);
+    setVulnDbMessage(null);
+    try {
+      const res = await api.updateVulnDb();
+      if (res.data?.success) {
+        setVulnDbMessage(`Imported ${res.data.totalImported} vulnerabilities`);
+        setVulnDbStatus({ lastUpdated: new Date().toISOString(), stats: res.data.stats });
+      } else {
+        setVulnDbMessage(`Update failed: ${res.data?.error || 'Unknown error'}`);
+      }
+    } catch (err: any) {
+      setVulnDbMessage(`Error: ${err.message}`);
+    } finally {
+      setVulnDbUpdating(false);
+      setTimeout(() => setVulnDbMessage(null), 5000);
     }
   };
 
@@ -170,6 +194,67 @@ export function SettingsPage() {
                 <span className="text-sm text-green-600">Settings saved successfully</span>
               )}
             </div>
+          </div>
+        </section>
+
+        {/* Vulnerability Database */}
+        <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center gap-2">
+              <Shield size={16} className="text-gray-600" />
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800">WordPress Vulnerability Database</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Local copy of the Open WordPress Vulnerability Database (OWVD) used for security analysis.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-4">
+            {/* Status */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Last Updated</p>
+                <p className="font-medium text-gray-800">
+                  {vulnDbStatus?.lastUpdated
+                    ? new Date(vulnDbStatus.lastUpdated).toLocaleString()
+                    : 'Never updated'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Vulnerabilities Tracked</p>
+                <p className="font-medium text-gray-800">
+                  {vulnDbStatus?.stats?.total ?? 0} total
+                  {vulnDbStatus?.stats?.byType && (
+                    <span className="text-xs text-gray-400 ml-1">
+                      ({Object.entries(vulnDbStatus.stats.byType).map(([type, count]: [string, any]) => `${count} ${type}`).join(', ')})
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Message */}
+            {vulnDbMessage && (
+              <div className={`text-sm px-3 py-2 rounded-lg ${
+                vulnDbMessage.startsWith('Error') || vulnDbMessage.startsWith('Update failed')
+                  ? 'bg-red-50 text-red-700 border border-red-200'
+                  : 'bg-green-50 text-green-700 border border-green-200'
+              }`}>
+                {vulnDbMessage}
+              </div>
+            )}
+
+            {/* Update Button */}
+            <button
+              onClick={handleVulnDbUpdate}
+              disabled={vulnDbUpdating}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {vulnDbUpdating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              {vulnDbUpdating ? 'Updating...' : 'Update Now'}
+            </button>
           </div>
         </section>
       </div>

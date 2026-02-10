@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { UserSearch, Mail, Loader2 } from 'lucide-react';
+import { UserSearch, Mail, Loader2, ArrowRight, Play } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { EnrichmentSiteTable } from '../components/enrichment/EnrichmentSiteTable';
 import { HunterEnrichmentForm } from '../components/enrichment/HunterEnrichmentForm';
@@ -68,6 +68,32 @@ export function EnrichmentPage() {
       setError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleMoveToAnalysis = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setError(null);
+    try {
+      await api.moveToAnalysis(ids);
+      setSelectedIds(new Set());
+      await fetchSites();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setError(null);
+    try {
+      await api.createAnalysisJob(ids);
+      setSelectedIds(new Set());
+      await fetchSites();
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -142,12 +168,32 @@ export function EnrichmentPage() {
                 <h3 className="text-sm font-medium text-gray-700">
                   Sites in Enrichment ({total})
                 </h3>
-                <button
-                  onClick={fetchSites}
-                  className="text-xs text-gray-500 hover:text-gray-700"
-                >
-                  Refresh
-                </button>
+                <div className="flex items-center gap-2">
+                  {selectedIds.size > 0 && (
+                    <>
+                      <button
+                        onClick={handleMoveToAnalysis}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50"
+                      >
+                        <ArrowRight size={12} />
+                        Move to Analysis ({selectedIds.size})
+                      </button>
+                      <button
+                        onClick={handleAnalyze}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700"
+                      >
+                        <Play size={12} />
+                        Analyze ({selectedIds.size})
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={fetchSites}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Refresh
+                  </button>
+                </div>
               </div>
               <EnrichmentSiteTable
                 sites={sites}
