@@ -4,6 +4,7 @@ dotenv.config({ path: '../.env' });
 import { app } from './app';
 import { getDb, closeDb } from './db';
 import { startDiscoveryWorker, stopDiscoveryWorker } from './workers/discovery-worker';
+import { startEnrichmentWorker, stopEnrichmentWorker } from './workers/enrichment-worker';
 
 const PORT = process.env.PORT || 3001;
 
@@ -15,6 +16,9 @@ console.log('[DB] Database initialized');
 startDiscoveryWorker();
 console.log('[Worker] Discovery worker started');
 
+startEnrichmentWorker();
+console.log('[Worker] Enrichment worker started');
+
 const server = app.listen(PORT, () => {
   console.log(`[Server] Running on http://localhost:${PORT}`);
 });
@@ -23,6 +27,7 @@ const server = app.listen(PORT, () => {
 function shutdown() {
   console.log('\n[Server] Shutting down...');
   stopDiscoveryWorker();
+  stopEnrichmentWorker();
   closeDb();
   server.close(() => {
     console.log('[Server] Closed');

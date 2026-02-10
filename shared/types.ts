@@ -8,7 +8,9 @@ export type JobType = 'discovery' | 'enrichment' | 'analysis' | 'report' | 'outr
 export type JobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type DiscoveryProvider = 'manual' | 'builtwith' | 'wappalyzer' | 'hunter';
 export type SiteStatus = 'pending' | 'active' | 'inactive' | 'error';
-export type PipelineStage = 'discovered' | 'enriched' | 'analyzed' | 'reported' | 'contacted';
+export type PipelineStage = 'discovered' | 'enrichment' | 'enriched' | 'analyzed' | 'reported' | 'contacted';
+export type EnrichmentProvider = 'hunter' | 'snov';
+export type EnrichmentStatus = 'pending' | 'enriching' | 'enriched' | 'error';
 export type LeadPriority = 'hot' | 'warm' | 'cold';
 export type OutreachStatus = 'not_started' | 'in_progress' | 'done';
 
@@ -16,7 +18,7 @@ export interface Job {
   id: string;
   type: JobType;
   status: JobStatus;
-  provider: DiscoveryProvider | null;
+  provider: DiscoveryProvider | EnrichmentProvider | null;
   config: Record<string, unknown> | null;
   progress: number;
   total_items: number;
@@ -55,6 +57,7 @@ export interface Site {
   industry_segment: string | null;
   ai_fit_reasoning: string | null;
   emails_available_count: number;
+  enrichment_status: EnrichmentStatus | null;
   priority: LeadPriority;
   outreach_status: OutreachStatus;
   notes: string | null;
@@ -219,6 +222,86 @@ export interface WPDetectionResult {
   http_status_code: number | null;
   ssl_valid: boolean | null;
   response_time_ms: number | null;
+}
+
+// --- Contact Types ---
+
+export interface Contact {
+  id: number;
+  site_id: number;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string | null;
+  position: string | null;
+  position_raw: string | null;
+  seniority: string | null;
+  department: string | null;
+  type: string | null;  // 'personal' or 'generic'
+  confidence: number | null;
+  linkedin_url: string | null;
+  twitter: string | null;
+  phone_number: string | null;
+  verification_status: string | null;  // 'valid', 'invalid', 'accept_all', 'unknown'
+  verification_date: string | null;
+  enrichment_source: EnrichmentProvider;
+  enrichment_job_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// --- Hunter.io Domain Search Config ---
+
+export interface HunterDomainSearchConfig {
+  domain: string;
+  company?: string;
+  type?: 'personal' | 'generic';
+  seniority?: string[];   // 'junior', 'senior', 'executive'
+  department?: string[];   // 'executive', 'it', 'finance', 'management', 'sales', etc.
+  required_field?: 'full_name' | 'position' | 'phone_number';
+  limit?: number;          // 1-100, default 5
+  offset?: number;
+  location?: {
+    include?: Array<{ continent?: string; business_region?: string; country?: string; state?: string; city?: string }>;
+    exclude?: Array<{ continent?: string; business_region?: string; country?: string; state?: string; city?: string }>;
+  };
+  job_titles?: string[];
+}
+
+export interface HunterDomainSearchResult {
+  domain: string;
+  organization: string | null;
+  pattern: string | null;
+  emails: HunterEmailResult[];
+  totalResults: number;
+}
+
+export interface HunterEmailResult {
+  value: string;
+  type: 'personal' | 'generic';
+  confidence: number;
+  first_name: string | null;
+  last_name: string | null;
+  position: string | null;
+  position_raw: string | null;
+  seniority: string | null;
+  department: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  phone_number: string | null;
+  verification: {
+    date: string | null;
+    status: string | null;  // 'valid', 'invalid', 'accept_all', 'unknown'
+  } | null;
+}
+
+// --- Enrichment Job Config ---
+
+export interface EnrichmentJobConfig {
+  siteIds: number[];
+  provider: EnrichmentProvider;
+  apiKey: string;
+  filters: HunterDomainSearchConfig;
 }
 
 // --- API Response Types ---

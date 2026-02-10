@@ -45,7 +45,33 @@ CREATE TABLE IF NOT EXISTS sites (
   outreach_status TEXT DEFAULT 'not_started',
   notes TEXT,
   created_at TEXT DEFAULT (datetime('now')),
+  enrichment_status TEXT,
   updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS contacts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  full_name TEXT,
+  position TEXT,
+  position_raw TEXT,
+  seniority TEXT,
+  department TEXT,
+  type TEXT,
+  confidence INTEGER,
+  linkedin_url TEXT,
+  twitter TEXT,
+  phone_number TEXT,
+  verification_status TEXT,
+  verification_date TEXT,
+  enrichment_source TEXT,
+  enrichment_job_id TEXT REFERENCES jobs(id),
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(site_id, email)
 );
 
 CREATE TABLE IF NOT EXISTS settings (
@@ -63,3 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_sites_priority ON sites(priority);
 CREATE INDEX IF NOT EXISTS idx_sites_country ON sites(country);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 CREATE INDEX IF NOT EXISTS idx_jobs_type ON jobs(type);
+CREATE INDEX IF NOT EXISTS idx_contacts_site_id ON contacts(site_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
+CREATE INDEX IF NOT EXISTS idx_contacts_verification ON contacts(verification_status);
+CREATE INDEX IF NOT EXISTS idx_sites_enrichment_status ON sites(enrichment_status);
