@@ -14,6 +14,7 @@ dist/
 data/*.db
 data/*.db-wal
 data/*.db-shm
+data/reports/*
 
 # Python
 __pycache__/

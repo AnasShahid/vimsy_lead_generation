@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Search, RefreshCw, Eye, Play, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Loader2, Search, RefreshCw, Eye, Play, AlertTriangle, ChevronDown, FileText } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { QueueFilters } from '../components/analysis/QueueFilters';
 import { AnalysisDetail } from '../components/analysis/AnalysisDetail';
@@ -104,6 +104,38 @@ function AnalysisStatusBadge({ status }: { status: string | null }) {
   }
   if (status === 'analyzed') {
     return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 border border-green-200">Analyzed</span>;
+  }
+  if (status === 'error') {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 border border-red-200">Error</span>;
+  }
+  return <span className="text-xs text-gray-400">—</span>;
+}
+
+function ReportStatusCell({ status, siteId }: { status: string | null; siteId: number }) {
+  if (!status) return <span className="text-xs text-gray-400">—</span>;
+  if (status === 'pending') {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">Queued</span>;
+  }
+  if (status === 'generating') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
+        <Loader2 size={10} className="animate-spin" />
+        Generating
+      </span>
+    );
+  }
+  if (status === 'completed') {
+    return (
+      <a
+        href={api.getReportPdfUrl(siteId)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 cursor-pointer"
+      >
+        <FileText size={10} />
+        Report Ready
+      </a>
+    );
   }
   if (status === 'error') {
     return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 border border-red-200">Error</span>;
@@ -335,6 +367,7 @@ export function AnalysisPage() {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vulns</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                     </tr>
                   </thead>
@@ -359,6 +392,7 @@ export function AnalysisPage() {
                           <ActionDropdown siteId={site.id} currentAction={site.analysis?.action_status ?? null} onUpdate={fetchSites} />
                         </td>
                         <td className="px-4 py-3"><AnalysisStatusBadge status={site.analysis_status} /></td>
+                        <td className="px-4 py-3"><ReportStatusCell status={site.report_status} siteId={site.id} /></td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
                             <button

@@ -8,6 +8,7 @@ import { settingsRoutes } from './routes/settings';
 import { enrichmentRoutes } from './routes/enrichment';
 import { analysisRoutes } from './routes/analysis';
 import { tagRoutes } from './routes/tags';
+import { reportRoutes } from './routes/reports';
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/enrichment', enrichmentRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

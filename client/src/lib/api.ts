@@ -235,4 +235,48 @@ export const api = {
 
   updateVulnDb: () =>
     request<any>('/settings/vuln-db/update', { method: 'POST' }),
+
+  // Report Settings
+  getReportSettings: () =>
+    request<any>('/settings/report'),
+
+  updateReportSettings: (body: Record<string, string>) =>
+    request<any>('/settings/report', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  // Reports
+  getReports: (params?: { status?: string; page?: number; pageSize?: number; sortBy?: string; sortOrder?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set('status', params.status);
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.pageSize) query.set('pageSize', String(params.pageSize));
+    if (params?.sortBy) query.set('sortBy', params.sortBy);
+    if (params?.sortOrder) query.set('sortOrder', params.sortOrder);
+    const qs = query.toString();
+    return request<any>(`/reports${qs ? `?${qs}` : ''}`);
+  },
+
+  getReport: (siteId: number) =>
+    request<any>(`/reports/${siteId}`),
+
+  generateReports: (siteIds: number[]) =>
+    request<any>('/reports/generate', {
+      method: 'POST',
+      body: JSON.stringify({ siteIds }),
+    }),
+
+  regenerateReport: (siteId: number) =>
+    request<any>(`/reports/${siteId}/regenerate`, { method: 'POST' }),
+
+  getReportJobs: () =>
+    request<any>('/reports/jobs'),
+
+  cancelReportJob: (jobId: string) =>
+    request<any>(`/reports/jobs/${jobId}`, { method: 'DELETE' }),
+
+  getReportPdfUrl: (siteId: number) => `${BASE_URL}/reports/${siteId}/pdf`,
+
+  getReportDownloadUrl: (siteId: number) => `${BASE_URL}/reports/${siteId}/download`,
 };

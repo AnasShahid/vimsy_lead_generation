@@ -12,6 +12,7 @@ export type PipelineStage = 'discovered' | 'enrichment' | 'enriched' | 'analysis
 export type EnrichmentProvider = 'hunter' | 'snov';
 export type EnrichmentStatus = 'pending' | 'enriching' | 'enriched' | 'error';
 export type AnalysisStatus = 'pending' | 'analyzing' | 'analyzed' | 'error';
+export type ReportStatus = 'pending' | 'generating' | 'completed' | 'error';
 export type AnalysisPriority = 'critical' | 'high' | 'medium' | 'low';
 export type AnalysisAction = 'qualified' | 'manual_review' | 'maintenance';
 export type LeadPriority = 'hot' | 'warm' | 'cold';
@@ -62,6 +63,7 @@ export interface Site {
   emails_available_count: number;
   enrichment_status: EnrichmentStatus | null;
   analysis_status: AnalysisStatus | null;
+  report_status: ReportStatus | null;
   priority: LeadPriority;
   outreach_status: OutreachStatus;
   notes: string | null;
@@ -312,6 +314,28 @@ export interface EnrichmentJobConfig {
 
 export interface AnalysisJobConfig {
   siteIds: number[];
+}
+
+export interface ReportJobConfig {
+  siteIds: number[];
+}
+
+export interface SiteReport {
+  id: number;
+  site_id: number;
+  report_job_id: string | null;
+  status: ReportStatus;
+  pdf_filename: string | null;
+  pdf_path: string | null;
+  ai_executive_summary: string | null;
+  ai_recommendations: string | null;
+  ai_pitch: string | null;
+  health_score: number | null;
+  priority_classification: string | null;
+  error: string | null;
+  generated_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SiteAnalysis {

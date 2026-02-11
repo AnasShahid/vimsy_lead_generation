@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { api } from '../lib/api';
-import { RotateCcw, Save, Check, Shield, Download, Loader2, Brain, Database } from 'lucide-react';
+import { RotateCcw, Save, Check, Shield, Download, Loader2, Brain, Database, FileText } from 'lucide-react';
 
 interface AIModel {
   id: string;
@@ -10,11 +10,12 @@ interface AIModel {
   tier: string;
 }
 
-type SettingsTab = 'ai' | 'security';
+type SettingsTab = 'ai' | 'security' | 'report';
 
 const TABS: { key: SettingsTab; label: string; icon: React.ReactNode; description: string }[] = [
   { key: 'ai', label: 'AI Analysis', icon: <Brain size={18} />, description: 'Model & prompt configuration' },
   { key: 'security', label: 'Security Database', icon: <Database size={18} />, description: 'Vulnerability data management' },
+  { key: 'report', label: 'Report Branding', icon: <FileText size={18} />, description: 'PDF report branding & content' },
 ];
 
 export function SettingsPage() {
@@ -29,19 +30,24 @@ export function SettingsPage() {
   const [vulnDbStatus, setVulnDbStatus] = useState<any>(null);
   const [vulnDbUpdating, setVulnDbUpdating] = useState(false);
   const [vulnDbMessage, setVulnDbMessage] = useState<string | null>(null);
+  const [reportSettings, setReportSettings] = useState<Record<string, string>>({});
+  const [reportSaving, setReportSaving] = useState(false);
+  const [reportSaved, setReportSaved] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const [settingsRes, modelsRes, vulnRes] = await Promise.all([
+        const [settingsRes, modelsRes, vulnRes, reportRes] = await Promise.all([
           api.getSettings(),
           api.getAIModels(),
           api.getVulnDbStatus().catch(() => ({ data: null })),
+          api.getReportSettings().catch(() => ({ data: {} })),
         ]);
         setAiModel(settingsRes.data.ai_model);
         setAiPrompt(settingsRes.data.ai_analysis_prompt);
         setModels(modelsRes.data);
         if (vulnRes.data) setVulnDbStatus(vulnRes.data);
+        if (reportRes.data) setReportSettings(reportRes.data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -73,6 +79,22 @@ export function SettingsPage() {
       setAiPrompt(res.data.ai_analysis_prompt);
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  const handleReportSave = async () => {
+    setReportSaving(true);
+    setReportSaved(false);
+    setError(null);
+    try {
+      const res = await api.updateReportSettings(reportSettings);
+      setReportSettings(res.data);
+      setReportSaved(true);
+      setTimeout(() => setReportSaved(false), 2000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setReportSaving(false);
     }
   };
 
@@ -230,6 +252,145 @@ export function SettingsPage() {
                     </button>
                     {saved && (
                       <span className="text-sm text-green-600">Settings saved successfully</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Report Branding Tab */}
+            {activeTab === 'report' && (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                  <h3 className="text-base font-semibold text-gray-800">Report Branding</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Configure the branding and content for generated PDF reports.
+                  </p>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  {/* Company Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                    <input
+                      type="text"
+                      value={reportSettings.report_company_name || ''}
+                      onChange={e => setReportSettings(s => ({ ...s, report_company_name: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="Vimsy"
+                    />
+                  </div>
+
+                  {/* Logo URL */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                    <input
+                      type="text"
+                      value={reportSettings.report_logo_url || ''}
+                      onChange={e => setReportSettings(s => ({ ...s, report_logo_url: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="https://example.com/logo.png"
+                    />
+                    {reportSettings.report_logo_url && (
+                      <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <img
+                          src={reportSettings.report_logo_url}
+                          alt="Logo preview"
+                          className="max-h-16 object-contain"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Primary Brand Color */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Brand Color</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={reportSettings.report_primary_color || '#4F46E5'}
+                        onChange={e => setReportSettings(s => ({ ...s, report_primary_color: e.target.value }))}
+                        className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={reportSettings.report_primary_color || ''}
+                        onChange={e => setReportSettings(s => ({ ...s, report_primary_color: e.target.value }))}
+                        className="w-32 border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="#4F46E5"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Disclaimer Text */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Disclaimer Text</label>
+                    <textarea
+                      value={reportSettings.report_disclaimer || ''}
+                      onChange={e => setReportSettings(s => ({ ...s, report_disclaimer: e.target.value }))}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y"
+                    />
+                  </div>
+
+                  {/* CTA Text */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Call-to-Action Text</label>
+                    <textarea
+                      value={reportSettings.report_cta_text || ''}
+                      onChange={e => setReportSettings(s => ({ ...s, report_cta_text: e.target.value }))}
+                      rows={2}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y"
+                    />
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+                      <input
+                        type="email"
+                        value={reportSettings.report_contact_email || ''}
+                        onChange={e => setReportSettings(s => ({ ...s, report_contact_email: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="hello@vimsy.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Contact Phone</label>
+                      <input
+                        type="tel"
+                        value={reportSettings.report_contact_phone || ''}
+                        onChange={e => setReportSettings(s => ({ ...s, report_contact_phone: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="+1 (555) 000-0000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Contact Website</label>
+                      <input
+                        type="url"
+                        value={reportSettings.report_contact_website || ''}
+                        onChange={e => setReportSettings(s => ({ ...s, report_contact_website: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="https://vimsy.com"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={handleReportSave}
+                      disabled={reportSaving}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {reportSaved ? <Check size={16} /> : <Save size={16} />}
+                      {reportSaving ? 'Saving...' : reportSaved ? 'Saved!' : 'Save Settings'}
+                    </button>
+                    {reportSaved && (
+                      <span className="text-sm text-green-600">Report settings saved successfully</span>
                     )}
                   </div>
                 </div>

@@ -197,4 +197,72 @@ export function runMigrations(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_wp_vulns_slug ON wp_vulnerabilities(software_slug)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_wp_vulns_type ON wp_vulnerabilities(software_type)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_wp_vulns_cvss ON wp_vulnerabilities(cvss_rating)');
+
+  // Phase 4: Add report_status column to sites
+  const reportColumns = [
+    { name: 'report_status', sql: 'ALTER TABLE sites ADD COLUMN report_status TEXT' },
+  ];
+  for (const col of reportColumns) {
+    try {
+      db.exec(col.sql);
+      console.log(`[DB] Migration: added column '${col.name}' to sites`);
+    } catch (err: any) {
+      if (err.message.includes('duplicate column name')) {
+        // Column already exists, skip
+      } else {
+        console.error(`[DB] Migration error for '${col.name}': ${err.message}`);
+      }
+    }
+  }
+
+  db.exec('CREATE INDEX IF NOT EXISTS idx_sites_report_status ON sites(report_status)');
+
+  // Phase 4: Create site_reports table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS site_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+      report_job_id TEXT REFERENCES jobs(id),
+      status TEXT NOT NULL DEFAULT 'pending',
+      pdf_filename TEXT,
+      pdf_path TEXT,
+      ai_executive_summary TEXT,
+      ai_recommendations TEXT,
+      ai_pitch TEXT,
+      health_score INTEGER,
+      priority_classification TEXT,
+      error TEXT,
+      generated_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_site_reports_site_id ON site_reports(site_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_site_reports_job_id ON site_reports(report_job_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_site_reports_status ON site_reports(status)');
+
+  // Phase 4: Ensure site_reports has all columns (for DBs where table was created before columns were added)
+  const reportTableColumns = [
+    { name: 'pdf_filename', sql: 'ALTER TABLE site_reports ADD COLUMN pdf_filename TEXT' },
+    { name: 'pdf_path', sql: 'ALTER TABLE site_reports ADD COLUMN pdf_path TEXT' },
+    { name: 'ai_executive_summary', sql: 'ALTER TABLE site_reports ADD COLUMN ai_executive_summary TEXT' },
+    { name: 'ai_recommendations', sql: 'ALTER TABLE site_reports ADD COLUMN ai_recommendations TEXT' },
+    { name: 'ai_pitch', sql: 'ALTER TABLE site_reports ADD COLUMN ai_pitch TEXT' },
+    { name: 'health_score', sql: 'ALTER TABLE site_reports ADD COLUMN health_score INTEGER' },
+    { name: 'priority_classification', sql: 'ALTER TABLE site_reports ADD COLUMN priority_classification TEXT' },
+    { name: 'error', sql: 'ALTER TABLE site_reports ADD COLUMN error TEXT' },
+    { name: 'generated_at', sql: 'ALTER TABLE site_reports ADD COLUMN generated_at TEXT' },
+  ];
+  for (const col of reportTableColumns) {
+    try {
+      db.exec(col.sql);
+      console.log(`[DB] Migration: added column '${col.name}' to site_reports`);
+    } catch (err: any) {
+      if (err.message.includes('duplicate column name')) {
+        // Column already exists, skip
+      } else {
+        console.error(`[DB] Migration error for site_reports.'${col.name}': ${err.message}`);
+      }
+    }
+  }
 }

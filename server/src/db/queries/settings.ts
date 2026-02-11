@@ -68,4 +68,74 @@ export function getAIPrompt(): string {
   return getSetting('ai_analysis_prompt') || DEFAULT_AI_PROMPT;
 }
 
+// --- Report Branding Settings ---
+
+export const DEFAULT_REPORT_SETTINGS: Record<string, string> = {
+  report_company_name: 'Vimsy',
+  report_logo_url: '',
+  report_primary_color: '#4F46E5',
+  report_disclaimer: 'This report is generated automatically based on publicly available data. While we strive for accuracy, some findings may require manual verification. This report is intended for informational purposes only.',
+  report_cta_text: 'Ready to improve your website? Contact Vimsy for a free consultation.',
+  report_contact_email: '',
+  report_contact_phone: '',
+  report_contact_website: 'https://vimsy.com',
+};
+
+export function getReportSettings(): Record<string, string> {
+  const result: Record<string, string> = { ...DEFAULT_REPORT_SETTINGS };
+  for (const key of Object.keys(DEFAULT_REPORT_SETTINGS)) {
+    const val = getSetting(key);
+    if (val !== null) {
+      result[key] = val;
+    }
+  }
+  return result;
+}
+
+export function setReportSettings(settings: Record<string, string>): void {
+  for (const [key, value] of Object.entries(settings)) {
+    if (key.startsWith('report_')) {
+      setSetting(key, value);
+    }
+  }
+}
+
+// --- Report AI Prompt ---
+
+export const DEFAULT_REPORT_PROMPT = `You are a professional technical writer for Vimsy, a premium WordPress maintenance and support service. Your task is to generate three sections for a branded website health report based on the analysis data provided.
+
+## Sections to Generate
+
+### 1. Executive Summary (3-5 paragraphs)
+Write a high-level overview of the site's health for a non-technical business owner. Reference the company name, industry, and specific scores. Highlight the most critical findings and convey urgency where appropriate. Be professional but approachable.
+
+### 2. Recommendations (5-10 bullet points)
+Provide actionable fixes prioritized by impact. Each recommendation should reference the specific finding (e.g., "Your SSL certificate expires in 12 days — renew immediately"). Group by category: Security, Performance, SEO, WordPress. Start each with a clear action verb.
+
+### 3. Vimsy Pitch (2-3 paragraphs)
+Write a personalized call-to-action explaining how Vimsy can solve the specific issues found. Reference the industry and business type. Explain the value of ongoing WordPress maintenance. End with a clear call to action.
+
+## Output Format
+Return ONLY valid JSON with exactly these three keys:
+{
+  "executive_summary": "...",
+  "recommendations": "...",
+  "pitch": "..."
+}
+
+## Style Guidelines
+- Use markdown formatting within each section (headers, bold, bullet points)
+- Be professional but approachable — avoid excessive jargon
+- Reference specific numbers and findings from the data provided
+- Keep the tone consultative, not salesy
+- Executive summary should feel like a trusted advisor's briefing
+- Recommendations should be specific and actionable, not generic
+- Pitch should feel personalized, not templated
+
+Return ONLY valid JSON. No markdown fences, no explanation text outside the JSON.`;
+
+export function getReportPrompt(): string {
+  return getSetting('report_ai_prompt') || DEFAULT_REPORT_PROMPT;
+}
+
 export { DEFAULT_AI_MODEL, DEFAULT_AI_PROMPT };

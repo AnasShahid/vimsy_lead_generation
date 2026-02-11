@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getAllSettings, getSetting, setSetting, getAIModel, getAIPrompt, DEFAULT_AI_MODEL, DEFAULT_AI_PROMPT } from '../db/queries/settings';
+import { getAllSettings, getSetting, setSetting, getAIModel, getAIPrompt, DEFAULT_AI_MODEL, DEFAULT_AI_PROMPT, getReportSettings, setReportSettings } from '../db/queries/settings';
 import { updateVulnerabilityDatabase, getVulnDbStatus } from '../services/analysis/vuln-db-updater';
 
 export const settingsRoutes = Router();
@@ -8,6 +8,7 @@ export const settingsRoutes = Router();
 const AVAILABLE_MODELS = [
   { id: 'openai/gpt-5.2', label: 'OpenAI GPT-5.2', provider: 'OpenAI', tier: 'flagship' },
   { id: 'openai/gpt-5-mini', label: 'OpenAI GPT-5 Mini', provider: 'OpenAI', tier: 'fast' },
+  { id: 'openai/gpt-4o-mini', label: 'OpenAI GPT-4-O Mini', provider: 'OpenAI', tier: 'fast' },
   { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google', tier: 'flagship' },
   { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', tier: 'fast' },
   { id: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5', provider: 'Anthropic', tier: 'flagship' },
@@ -18,11 +19,13 @@ const AVAILABLE_MODELS = [
 settingsRoutes.get('/', (_req: Request, res: Response) => {
   try {
     const settings = getAllSettings();
+    const reportSettings = getReportSettings();
     return res.json({
       success: true,
       data: {
         ai_model: settings.ai_model || DEFAULT_AI_MODEL,
         ai_analysis_prompt: settings.ai_analysis_prompt || DEFAULT_AI_PROMPT,
+        ...reportSettings,
       },
     });
   } catch (err: any) {
@@ -97,6 +100,31 @@ settingsRoutes.post('/vuln-db/update', async (_req: Request, res: Response) => {
   try {
     const result = await updateVulnerabilityDatabase();
     return res.json({ success: result.success, data: result });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/settings/report - Get report branding settings
+settingsRoutes.get('/report', (_req: Request, res: Response) => {
+  try {
+    const reportSettings = getReportSettings();
+    return res.json({ success: true, data: reportSettings });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/settings/report - Update report branding settings
+settingsRoutes.put('/report', (req: Request, res: Response) => {
+  try {
+    const body = req.body;
+    if (!body || typeof body !== 'object') {
+      return res.status(400).json({ success: false, error: 'Request body must be an object' });
+    }
+    setReportSettings(body);
+    const updated = getReportSettings();
+    return res.json({ success: true, data: updated });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

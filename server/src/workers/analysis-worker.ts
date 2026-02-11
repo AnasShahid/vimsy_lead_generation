@@ -1,5 +1,6 @@
 import type { Job, AnalysisJobConfig } from '@vimsy/shared';
-import { getNextPendingJob, updateJobStatus, updateJobProgress } from '../db/queries/jobs';
+import { v4 as uuidv4 } from 'uuid';
+import { getNextPendingJob, updateJobStatus, updateJobProgress, createJob } from '../db/queries/jobs';
 import { batchUpdateSites } from '../db/queries/sites';
 import { createAnalysis, updateAnalysis } from '../db/queries/analyses';
 import { addTag } from '../db/queries/tags';
@@ -97,6 +98,26 @@ async function runAnalysisJob(job: Job, signal: AbortSignal): Promise<void> {
           completedCount++;
           batchUpdateSites([siteId], { analysis_status: 'analyzed' });
           addTag(siteId, 'analyzed');
+
+          // Auto-queue report generation
+          try {
+            const reportJobId = uuidv4();
+            createJob({
+              id: reportJobId,
+              type: 'report',
+              status: 'pending',
+              provider: null,
+              config: { siteIds: [siteId] },
+              progress: 0,
+              total_items: 1,
+              processed_items: 0,
+              error: null,
+            });
+            batchUpdateSites([siteId], { report_status: 'pending' });
+            console.log(`[Analysis Worker] Auto-queued report generation for site ${siteId} (job ${reportJobId})`);
+          } catch (reportErr: any) {
+            console.error(`[Analysis Worker] Failed to auto-queue report for site ${siteId}: ${reportErr.message}`);
+          }
         } else {
           errorCount++;
           batchUpdateSites([siteId], { analysis_status: 'error' });

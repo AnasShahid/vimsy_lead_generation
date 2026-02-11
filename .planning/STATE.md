@@ -3,23 +3,23 @@
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** 4 of 7 (PDF Report Generation)
-**Plan:** 0 of 5 (Not started)
-**Status:** Ready to execute
+**Phase:** 4.1 of 7 (Leads Tracking Page)
+**Plan:** 0 of ? (Not started)
+**Status:** Ready to plan
 
 **Progress:**
 ```
-░░░░░░░░░░░░░░░░░░░░ 0% (Phase 4 — planned 2026-02-11)
+████████████████████ 100% (Phase 4 — completed 2026-02-11)
 ```
 
-**Last activity:** 2026-02-11 - Created 5 plans for Phase 4 (PDF Report Generation)
+**Last activity:** 2026-02-11 - Completed all 5 plans for Phase 4 (PDF Report Generation)
 
 ## Session Continuity
 
 **Last session:** 2026-02-11
-**Stopped at:** Phase 4 planned, ready to execute
+**Stopped at:** Phase 4 complete
 **Resume file:** None
-**Next action:** Execute Phase 4 Plan 1 (Report Data Model & Settings)
+**Next action:** Plan and execute Phase 4.1 (Leads Tracking Page)
 
 ## Decisions
 
@@ -90,7 +90,13 @@ None.
 - Availability checker (uptime, response time, sitemap detection, meta description check)
 - Vulnerability data from local OWVD SQLite + API fallback
 - Analysis worker processes 5 sites in parallel per batch via Promise.allSettled
-- Tags system: system-assigned (discovered, enriched, analyzed), stored in site_tags table
+- Tags system: system-assigned (discovered, enriched, analyzed, reported), stored in site_tags table
+- Phase 4: PDF Report Generation — Puppeteer + Handlebars, AI-generated sections (exec summary, recommendations, pitch), auto-queued after analysis
+- Report worker processes 1 site at a time (Puppeteer is memory-heavy), sequential within job
+- Report branding configurable via Settings > Report Branding tab (company name, logo, color, disclaimer, CTA, contact info)
+- Reports stored in data/reports/ as PDF files, paths in site_reports table
+- Report API: generate (bulk), list, get, pdf (inline), download (attachment), regenerate
+- Analysis page shows report status column; Reports page has full management UI with PDF viewer modal
 
 ---
 *Auto-updated by GSD workflows*
