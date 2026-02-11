@@ -1,4 +1,3 @@
-import { OpenRouter } from '@openrouter/sdk';
 import { getSiteById } from '../../db/queries/sites';
 import { getAnalysisBySiteId } from '../../db/queries/analyses';
 import { getContactCountBySiteId } from '../../db/queries/contacts';
@@ -11,12 +10,15 @@ export interface ReportAIContent {
   pitch: string;
 }
 
-function getOpenRouterClient(): OpenRouter {
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const REQUEST_TIMEOUT_MS = 120_000; // 2 minutes
+
+function getOpenRouterApiKey(): string {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY environment variable is required for report generation');
   }
-  return new OpenRouter({ apiKey });
+  return apiKey;
 }
 
 /**
@@ -170,11 +172,11 @@ export async function generateReportContent(siteId: number): Promise<ReportAICon
   // Get AI config
   const model = getAIModel();
   const prompt = getReportPrompt();
-  const client = getOpenRouterClient();
 
   console.log(`[Report AI] Generating content for site ${siteId} (${site.domain}) using model ${model}`);
 
-  // Call OpenRouter
+  // Call OpenRouter via direct fetch (SDK v0.8.0 hangs on chat.send)
+  const apiKey = getOpenRouterApiKey();
   let content: string | null = null;
   let retryCount = 0;
   const maxRetries = 1;
@@ -182,22 +184,34 @@ export async function generateReportContent(siteId: number): Promise<ReportAICon
   while (retryCount <= maxRetries) {
     try {
       const temperature = retryCount === 0 ? 0.4 : 0.2;
-      const response = await client.chat.send({
-        httpReferer: 'https://vimsy.com',
-        xTitle: 'Vimsy Lead Gen - Report',
-        chatGenerationParams: {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://vimsy.com',
+          'X-Title': 'Vimsy Lead Gen - Report',
+        },
+        body: JSON.stringify({
           model,
           messages: [
             { role: 'system', content: prompt },
             { role: 'user', content: contextString },
           ],
           temperature,
-          responseFormat: { type: 'json_object' },
+          response_format: { type: 'json_object' },
           stream: false,
-        },
+        }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
-      content = (response as any).choices?.[0]?.message?.content;
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`OpenRouter API error ${response.status}: ${errorBody.slice(0, 300)}`);
+      }
+
+      const data: any = await response.json();
+      content = data?.choices?.[0]?.message?.content;
       if (content) break;
 
       console.warn(`[Report AI] Empty response for site ${siteId}, retry ${retryCount + 1}`);

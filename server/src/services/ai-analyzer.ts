@@ -1,7 +1,9 @@
-import { OpenRouter } from '@openrouter/sdk';
 import { getSiteById, upsertSite } from '../db/queries/sites';
 import { getAIModel, getAIPrompt } from '../db/queries/settings';
 import type { Site, LeadPriority, ProgressCallback } from '@vimsy/shared';
+
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const REQUEST_TIMEOUT_MS = 120_000;
 
 function buildSiteContext(site: Site): string {
   const parts = [
@@ -17,12 +19,12 @@ function buildSiteContext(site: Site): string {
   return parts.filter(Boolean).join('\n');
 }
 
-function getOpenRouterClient(): OpenRouter {
+function getOpenRouterApiKey(): string {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY environment variable is required for AI analysis');
   }
-  return new OpenRouter({ apiKey });
+  return apiKey;
 }
 
 /**
@@ -44,7 +46,7 @@ export async function analyzeSites(
   siteIds: number[],
   onProgress?: ProgressCallback
 ): Promise<void> {
-  const client = getOpenRouterClient();
+  const apiKey = getOpenRouterApiKey();
   const model = getAIModel();
   const prompt = getAIPrompt();
   const BATCH_SIZE = 5;
@@ -65,22 +67,36 @@ export async function analyzeSites(
       .join('\n\n');
 
     try {
-      const response = await client.chat.send({
-        httpReferer: 'https://vimsy.com',
-        xTitle: 'Vimsy Lead Gen',
-        chatGenerationParams: {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://vimsy.com',
+          'X-Title': 'Vimsy Lead Gen',
+        },
+        body: JSON.stringify({
           model,
           messages: [
             { role: 'system', content: prompt },
             { role: 'user', content: userMessage },
           ],
           temperature: 0.3,
-          responseFormat: { type: 'json_object' },
+          response_format: { type: 'json_object' },
           stream: false,
-        },
+        }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
-      const content = (response as any).choices?.[0]?.message?.content;
+      if (!response.ok) {
+        const errorBody = await response.text();
+        const err: any = new Error(`OpenRouter API error ${response.status}: ${errorBody.slice(0, 300)}`);
+        err.statusCode = response.status;
+        throw err;
+      }
+
+      const data: any = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
       if (!content) {
         console.warn('[AI] Empty response for batch starting at index', i);
         continue;
