@@ -3,23 +3,23 @@
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** 3 of 7 (Technical Analysis & Scoring) — VERIFIED COMPLETE
-**Plan:** All plans complete
-**Status:** Phase 3 verified against all 8 success criteria, ready for next phase
+**Phase:** 4 of 7 (PDF Report Generation)
+**Plan:** 0 of 5 (Not started)
+**Status:** Ready to execute
 
 **Progress:**
 ```
-████████████████████ 100% (Phase 3 — verified 2026-02-11)
+░░░░░░░░░░░░░░░░░░░░ 0% (Phase 4 — planned 2026-02-11)
 ```
 
-**Last activity:** 2026-02-11 - Phase 3 verification: all 8 criteria pass, UI overhaul (score colors, action system, vulns column), stale data backfilled
+**Last activity:** 2026-02-11 - Created 5 plans for Phase 4 (PDF Report Generation)
 
 ## Session Continuity
 
 **Last session:** 2026-02-11
-**Stopped at:** Phase 3 verified complete
+**Stopped at:** Phase 4 planned, ready to execute
 **Resume file:** None
-**Next action:** Begin next phase (Phase 4: PDF Reports, Phase 7: Leads Tracking, or user's choice)
+**Next action:** Execute Phase 4 Plan 1 (Report Data Model & Settings)
 
 ## Decisions
 
@@ -35,6 +35,9 @@
 | OpenRouter over direct OpenAI | Single API key for GPT-4o, Gemini, Claude; model stored in DB | 2026-02-09 | 1 |
 | Hunter.io Discover over Lead Lists | Discover API finds companies by filters; lead lists only return contacts | 2026-02-09 | 1 |
 | Remove Directories provider | Not useful for Vimsy lead gen workflow | 2026-02-09 | 1 |
+| Puppeteer + Handlebars for PDF reports | HTML→PDF via Puppeteer, Handlebars templates on disk, branding settings in DB | 2026-02-11 | 4 |
+| AI-generated report sections | Executive Summary, Recommendations, Pitch — generated once via OpenRouter, stored in DB | 2026-02-11 | 4 |
+| Auto-queue reports after analysis | Report job auto-created when analysis completes, processed by report worker | 2026-02-11 | 4 |
 
 ## Blockers & Concerns
 
