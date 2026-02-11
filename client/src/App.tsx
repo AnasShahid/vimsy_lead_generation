@@ -7,6 +7,7 @@ import { AnalysisPage } from './pages/AnalysisPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { OutreachPage } from './pages/OutreachPage';
 import { TrackingPage } from './pages/TrackingPage';
+import { LeadsPage } from './pages/LeadsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/enrichment" element={<EnrichmentPage />} />
         <Route path="/analysis" element={<AnalysisPage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/leads" element={<LeadsPage />} />
         <Route path="/outreach" element={<OutreachPage />} />
         <Route path="/tracking" element={<TrackingPage />} />
         <Route path="/settings" element={<SettingsPage />} />

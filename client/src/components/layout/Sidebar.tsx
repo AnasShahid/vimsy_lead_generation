@@ -8,6 +8,7 @@ import {
   Mail,
   BarChart3,
   Settings,
+  Target,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { to: '/enrichment', label: '2. Enrichment', icon: Users },
   { to: '/analysis', label: '3. Analysis', icon: Activity },
   { to: '/reports', label: '4. Reports', icon: FileText },
+  { to: '/leads', label: 'Leads', icon: Target },
   { to: '/outreach', label: '5. Outreach', icon: Mail },
   { to: '/tracking', label: '6. Tracking', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
