@@ -27,13 +27,13 @@
 
 ### Analysis (Step 3)
 
-- **REQ-018** — Technical site analysis with 0-100 health scoring
-- **REQ-019** — PageSpeed Insights / Lighthouse integration for performance metrics
-- **REQ-020** — SSL/TLS security analysis
-- **REQ-021** — WordPress version and vulnerability detection
-- **REQ-022** — Priority classification (Critical/High/Medium/Low) based on health score
-- **REQ-023** — Auto-qualify sites with score <40 for outreach
-- **REQ-024** — Manual review queue for medium-scored sites (40-75)
+- **REQ-018** — Technical site analysis with 0-100 health scoring ✅
+- **REQ-019** — PageSpeed Insights / Lighthouse integration for performance metrics ✅
+- **REQ-020** — SSL/TLS security analysis ✅
+- **REQ-021** — WordPress version and vulnerability detection ✅
+- **REQ-022** — Priority classification (Critical/High/Medium/Low) based on health score ✅
+- **REQ-023** — Auto-qualify sites with score <40 for outreach ✅
+- **REQ-024** — Manual review queue for medium-scored sites (40-75) ✅
 
 ### Reports (Step 4)
 
@@ -45,12 +45,14 @@
 - **REQ-027** — Instantly.ai or similar cold email platform integration
 - **REQ-028** — Email template management with personalization tokens
 - **REQ-029** — Response tracking and conversion monitoring
+- **REQ-036** — Update Leads page with outreach status columns (sent, opened, replied, bounced) and outreach detail in expandable view
 
 ### Dashboard & Tracking
 
 - **REQ-030** — Pipeline dashboard with stats and conversion metrics across all steps
+- **REQ-037** — Update Leads page with pipeline metrics summary and conversion indicators per lead
 
-### Leads Tracking (Step 2.5 — Unified View)
+### Leads Tracking (Step 4.5 — Unified View)
 
 - **REQ-031** — Unified Leads page showing all post-discovery sites with combined enrichment, analysis, report, and outreach status
 - **REQ-032** — Expandable lead detail view with contacts, analysis scores, reports, and action history
@@ -95,24 +97,26 @@
 | REQ-015 | 1 | 01-03 | ✅ Done |
 | REQ-016 | 2 | 02-01, 02-02, 02-03 | ✅ Done |
 | REQ-017 | 2 | — | Deferred (Snov.io placeholder) |
-| REQ-018 | 3 | TBD | Pending |
-| REQ-019 | 3 | TBD | Pending |
-| REQ-020 | 3 | TBD | Pending |
-| REQ-021 | 3 | TBD | Pending |
-| REQ-022 | 3 | TBD | Pending |
-| REQ-023 | 3 | TBD | Pending |
-| REQ-024 | 3 | TBD | Pending |
+| REQ-018 | 3 | TBD | ✅ Done |
+| REQ-019 | 3 | TBD | ✅ Done |
+| REQ-020 | 3 | TBD | ✅ Done |
+| REQ-021 | 3 | TBD | ✅ Done |
+| REQ-022 | 3 | TBD | ✅ Done |
+| REQ-023 | 3 | TBD | ✅ Done |
+| REQ-024 | 3 | TBD | ✅ Done |
 | REQ-025 | 4 | TBD | Pending |
 | REQ-026 | 5 | TBD | Pending |
 | REQ-027 | 5 | TBD | Pending |
 | REQ-028 | 5 | TBD | Pending |
 | REQ-029 | 5 | TBD | Pending |
 | REQ-030 | 6 | TBD | Pending |
-| REQ-031 | 7 | TBD | Pending |
-| REQ-032 | 7 | TBD | Pending |
-| REQ-033 | 7 | TBD | Pending |
-| REQ-034 | 7 | TBD | Pending |
-| REQ-035 | 7 | TBD | Pending |
+| REQ-031 | 4.1 | TBD | Pending |
+| REQ-032 | 4.1 | TBD | Pending |
+| REQ-033 | 4.1 | TBD | Pending |
+| REQ-034 | 4.1 | TBD | Pending |
+| REQ-035 | 4.1 | TBD | Pending |
+| REQ-036 | 5 | TBD | Pending |
+| REQ-037 | 6 | TBD | Pending |
 
 ---
-*Last updated: 2026-02-11*
+*Last updated: 2026-02-11 — Phase 3 done, Phase 4.1 inserted, REQ-036/037 added*

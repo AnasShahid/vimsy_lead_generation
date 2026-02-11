@@ -14,9 +14,9 @@ Phase 1  ██████████ 100%  Discovery Improvements
 Phase 2  ██████████ 100%  Contact Enrichment
 Phase 3  ██████████ 100%  Technical Analysis & Scoring
 Phase 4  ░░░░░░░░░░  0%  PDF Report Generation
+Phase 4.1░░░░░░░░░░  0%  Leads Tracking Page
 Phase 5  ░░░░░░░░░░  0%  Cold Email Outreach
 Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
-Phase 7  ░░░░░░░░░░  0%  Leads Tracking Page
 ```
 
 ## Phases
@@ -100,53 +100,15 @@ Phase 7  ░░░░░░░░░░  0%  Leads Tracking Page
 
 ---
 
-### Phase 5: Cold Email Outreach
-
-**Goal:** Qualified leads receive a 4-email sequence via Instantly.ai with personalized content and attached PDF reports, with delivery tracked.
-
-**Requirements:** REQ-026, REQ-027, REQ-028, REQ-029
-
-**Depends on:** Phase 2, Phase 4
-
-**Success Criteria:**
-- [ ] Instantly.ai integration sends emails via API
-- [ ] 4-sequence campaign (Day 0, 3, 7, 14) configured and triggered per lead
-- [ ] Email templates support personalization tokens (company name, issues found, score)
-- [ ] PDF reports attached to initial outreach email
-- [ ] Template management UI for creating/editing email sequences
-- [ ] Response tracking captures opens, replies, bounces from Instantly.ai
-- [ ] Conversion monitoring tracks lead → consultation → customer
-
-**Research flag:** Required (Instantly.ai API, email deliverability best practices, CAN-SPAM/GDPR compliance)
-
----
-
-### Phase 6: Pipeline Dashboard & Metrics
-
-**Goal:** Team has a single dashboard showing the full pipeline funnel — from discovery through conversion — with actionable stats.
-
-**Requirements:** REQ-030
-
-**Depends on:** Phase 5
-
-**Success Criteria:**
-- [ ] Dashboard shows counts at each pipeline stage (discovered → enriched → analyzed → reported → contacted → responded → converted)
-- [ ] Conversion rates displayed between each stage
-- [ ] Time-series charts for leads processed per week
-- [ ] Filterable by date range, priority, geographic market
-- [ ] Export pipeline stats to CSV
-
-**Research flag:** None
-
----
-
-### Phase 7: Leads Tracking Page
+### Phase 4.1: Leads Tracking Page
 
 **Goal:** A unified Leads page that tracks every post-discovery site through the entire pipeline — showing contacts, analysis status, reports, and outreach in one place — so enrichment data is never lost when sites move to later stages.
 
 **Requirements:** REQ-031, REQ-032, REQ-033, REQ-034, REQ-035
 
-**Depends on:** Phase 2
+**Inserted:** 2026-02-11 — Needed before outreach phases so pipeline tracking is in place
+
+**Depends on:** Phase 2, Phase 4
 
 **Success Criteria:**
 - [ ] Unified Leads page shows all sites that have left Discovery (enrichment onwards)
@@ -157,6 +119,48 @@ Phase 7  ░░░░░░░░░░  0%  Leads Tracking Page
 - [ ] "Select all by filter" allows bulk actions on filtered subsets
 - [ ] Analysis can be triggered directly from the Leads page without losing enrichment context
 - [ ] Leads page becomes the central tracking hub; enrichment/analysis tabs become action-focused tools
+
+**Research flag:** None
+
+---
+
+### Phase 5: Cold Email Outreach
+
+**Goal:** Qualified leads receive a 4-email sequence via Instantly.ai with personalized content and attached PDF reports, with delivery tracked.
+
+**Requirements:** REQ-026, REQ-027, REQ-028, REQ-029, REQ-036
+
+**Depends on:** Phase 2, Phase 4, Phase 4.1
+
+**Success Criteria:**
+- [ ] Instantly.ai integration sends emails via API
+- [ ] 4-sequence campaign (Day 0, 3, 7, 14) configured and triggered per lead
+- [ ] Email templates support personalization tokens (company name, issues found, score)
+- [ ] PDF reports attached to initial outreach email
+- [ ] Template management UI for creating/editing email sequences
+- [ ] Response tracking captures opens, replies, bounces from Instantly.ai
+- [ ] Conversion monitoring tracks lead → consultation → customer
+- [ ] Leads page updated with outreach status columns (sent, opened, replied, bounced) and outreach detail in expandable view
+
+**Research flag:** Required (Instantly.ai API, email deliverability best practices, CAN-SPAM/GDPR compliance)
+
+---
+
+### Phase 6: Pipeline Dashboard & Metrics
+
+**Goal:** Team has a single dashboard showing the full pipeline funnel — from discovery through conversion — with actionable stats.
+
+**Requirements:** REQ-030, REQ-037
+
+**Depends on:** Phase 5
+
+**Success Criteria:**
+- [ ] Dashboard shows counts at each pipeline stage (discovered → enriched → analyzed → reported → contacted → responded → converted)
+- [ ] Conversion rates displayed between each stage
+- [ ] Time-series charts for leads processed per week
+- [ ] Filterable by date range, priority, geographic market
+- [ ] Export pipeline stats to CSV
+- [ ] Leads page updated with pipeline metrics summary and conversion indicators per lead
 
 **Research flag:** None
 
@@ -196,11 +200,13 @@ Phase 7  ░░░░░░░░░░  0%  Leads Tracking Page
 | REQ-028 | 5 | Pending |
 | REQ-029 | 5 | Pending |
 | REQ-030 | 6 | Pending |
-| REQ-031 | 7 | Pending |
-| REQ-032 | 7 | Pending |
-| REQ-033 | 7 | Pending |
-| REQ-034 | 7 | Pending |
-| REQ-035 | 7 | Pending |
+| REQ-031 | 4.1 | Pending |
+| REQ-032 | 4.1 | Pending |
+| REQ-033 | 4.1 | Pending |
+| REQ-034 | 4.1 | Pending |
+| REQ-035 | 4.1 | Pending |
+| REQ-036 | 5 | Pending |
+| REQ-037 | 6 | Pending |
 
 ## Timeline Estimate
 
@@ -210,9 +216,9 @@ Phase 7  ░░░░░░░░░░  0%  Leads Tracking Page
 | 2 — Contact Enrichment | Medium | 2 |
 | 3 — Technical Analysis & Scoring | High | 3 |
 | 4 — PDF Report Generation | Medium | 2 |
+| 4.1 — Leads Tracking Page | Medium | 2 |
 | 5 — Cold Email Outreach | High | 3 |
 | 6 — Pipeline Dashboard & Metrics | Low | 1 |
-| 7 — Leads Tracking Page | Medium | 2 |
 
 ---
-*Last updated: 2026-02-11 — Phase 3 verified complete, Phase 7 added*
+*Last updated: 2026-02-11 — Phase 3 complete, Phase 4.1 (Leads Tracking) inserted after Phase 4*
