@@ -216,6 +216,12 @@ export const api = {
       body: JSON.stringify({ siteIds }),
     }),
 
+  updateActionStatus: (siteId: number, action_status: string) =>
+    request<any>(`/analysis/sites/${siteId}/action`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action_status }),
+    }),
+
   // Tags
   getTagsForSites: (ids: number[]) =>
     request<any>(`/tags/sites?ids=${ids.join(',')}`),

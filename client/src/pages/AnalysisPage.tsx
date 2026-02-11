@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Search, RefreshCw, Eye, Play } from 'lucide-react';
+import { Loader2, Search, RefreshCw, Eye, Play, AlertTriangle, ChevronDown } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { QueueFilters } from '../components/analysis/QueueFilters';
 import { AnalysisDetail } from '../components/analysis/AnalysisDetail';
-import { TagBadges } from '../components/common/TagBadges';
 import { usePolling } from '../hooks/usePolling';
 import { api } from '../lib/api';
 import type { QueueFilter, QueueFilterCounts } from '../components/analysis/QueueFilters';
@@ -11,9 +10,9 @@ import type { QueueFilter, QueueFilterCounts } from '../components/analysis/Queu
 function HealthScoreBadge({ score }: { score: number | null }) {
   if (score === null || score === undefined) return <span className="text-xs text-gray-400">—</span>;
   let color = 'bg-green-100 text-green-700 border-green-200';
-  if (score < 40) color = 'bg-red-100 text-red-700 border-red-200';
-  else if (score < 56) color = 'bg-orange-100 text-orange-700 border-orange-200';
-  else if (score < 76) color = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  if (score <= 40) color = 'bg-red-100 text-red-700 border-red-200';
+  else if (score <= 60) color = 'bg-orange-100 text-orange-700 border-orange-200';
+  else if (score <= 75) color = 'bg-yellow-100 text-yellow-700 border-yellow-200';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border ${color}`}>
       {score}
@@ -23,17 +22,71 @@ function HealthScoreBadge({ score }: { score: number | null }) {
 
 function PriorityBadge({ priority }: { priority: string | null }) {
   if (!priority) return <span className="text-xs text-gray-400">—</span>;
-  const colors: Record<string, string> = {
-    critical: 'bg-red-100 text-red-700 border-red-200',
-    high: 'bg-orange-100 text-orange-700 border-orange-200',
-    medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    low: 'bg-green-100 text-green-700 border-green-200',
+  const config: Record<string, { color: string; emoji: string }> = {
+    critical: { color: 'bg-red-100 text-red-700 border-red-200', emoji: '🔥' },
+    high: { color: 'bg-orange-100 text-orange-700 border-orange-200', emoji: '⚠️' },
+    medium: { color: 'bg-yellow-100 text-yellow-700 border-yellow-200', emoji: '⚡' },
+    low: { color: 'bg-green-100 text-green-700 border-green-200', emoji: '✅' },
   };
+  const c = config[priority] || { color: 'bg-gray-100 text-gray-600 border-gray-200', emoji: '' };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${colors[priority] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${c.color}`}>
+      <span className="text-[10px]">{c.emoji}</span>
       {priority.charAt(0).toUpperCase() + priority.slice(1)}
-      {priority === 'critical' && <span className="ml-1 text-[10px]">✓ Auto-Qualified</span>}
     </span>
+  );
+}
+
+function ActionDropdown({ siteId, currentAction, onUpdate }: { siteId: number; currentAction: string | null; onUpdate: () => void }) {
+  const [open, setOpen] = useState(false);
+
+  const actions = [
+    { key: 'qualified', label: 'Qualified', color: 'text-red-700 bg-red-50' },
+    { key: 'manual_review', label: 'Manual Review', color: 'text-yellow-700 bg-yellow-50' },
+    { key: 'maintenance', label: 'Maintenance', color: 'text-green-700 bg-green-50' },
+  ];
+
+  const current = actions.find(a => a.key === currentAction) || actions[1];
+
+  const handleSelect = async (actionKey: string) => {
+    setOpen(false);
+    if (actionKey === currentAction) return;
+    try {
+      await api.updateActionStatus(siteId, actionKey);
+      onUpdate();
+    } catch {
+      // silent
+    }
+  };
+
+  if (!currentAction) return <span className="text-xs text-gray-400">—</span>;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-gray-200 ${current.color} hover:opacity-80 transition-opacity`}
+      >
+        {current.label}
+        <ChevronDown size={10} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[140px]">
+            {actions.map(a => (
+              <button
+                key={a.key}
+                onClick={() => handleSelect(a.key)}
+                className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${a.key === currentAction ? 'font-bold' : ''}`}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -58,14 +111,26 @@ function AnalysisStatusBadge({ status }: { status: string | null }) {
   return <span className="text-xs text-gray-400">—</span>;
 }
 
-function ScoreCell({ score }: { score: number | null | undefined }) {
+// Score cell that colors based on score/max ratio
+function ScoreCell({ score, max }: { score: number | null | undefined; max: number }) {
   if (score === null || score === undefined) return <span className="text-xs text-gray-400">—</span>;
   const rounded = Math.round(score);
+  const pct = (rounded / max) * 100;
   let color = 'text-green-600';
-  if (rounded < 40) color = 'text-red-600';
-  else if (rounded < 56) color = 'text-orange-600';
-  else if (rounded < 76) color = 'text-yellow-600';
-  return <span className={`text-xs font-medium ${color}`}>{rounded}</span>;
+  if (pct < 40) color = 'text-red-600';
+  else if (pct < 60) color = 'text-orange-600';
+  else if (pct < 80) color = 'text-yellow-600';
+  return <span className={`text-xs font-medium ${color}`}>{rounded}<span className="text-gray-400">/{max}</span></span>;
+}
+
+function VulnCell({ count }: { count: number | null | undefined }) {
+  if (count === null || count === undefined || count === 0) return <span className="text-xs text-gray-400">0</span>;
+  return (
+    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-red-600">
+      <AlertTriangle size={10} />
+      {count}
+    </span>
+  );
 }
 
 export function AnalysisPage() {
@@ -105,23 +170,23 @@ export function AnalysisPage() {
   const hasActiveJobs = jobs.some((j: any) => j.status === 'pending' || j.status === 'running');
   usePolling(() => { fetchSites(); fetchJobs(); }, 3000, hasActiveJobs);
 
-  // Filter sites client-side based on queue filter
+  // Filter sites client-side based on action_status queue filter
   const filteredSites = sites.filter(s => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'pending') return s.analysis_status === 'pending' || s.analysis_status === 'analyzing';
     if (activeFilter === 'errors') return s.analysis_status === 'error';
-    if (activeFilter === 'auto_qualified') return s.analysis?.priority_classification === 'critical' || s.analysis?.priority_classification === 'high';
-    if (activeFilter === 'manual_review') return s.analysis?.priority_classification === 'medium';
-    if (activeFilter === 'low_priority') return s.analysis?.priority_classification === 'low';
+    if (activeFilter === 'qualified') return s.analysis?.action_status === 'qualified';
+    if (activeFilter === 'manual_review') return s.analysis?.action_status === 'manual_review';
+    if (activeFilter === 'maintenance') return s.analysis?.action_status === 'maintenance';
     return true;
   });
 
-  // Calculate counts for queue filters
+  // Calculate counts for queue filters (action-based)
   const counts: QueueFilterCounts = {
     all: sites.length,
-    autoQualified: sites.filter(s => s.analysis?.priority_classification === 'critical' || s.analysis?.priority_classification === 'high').length,
-    manualReview: sites.filter(s => s.analysis?.priority_classification === 'medium').length,
-    lowPriority: sites.filter(s => s.analysis?.priority_classification === 'low').length,
+    qualified: sites.filter(s => s.analysis?.action_status === 'qualified').length,
+    manualReview: sites.filter(s => s.analysis?.action_status === 'manual_review').length,
+    maintenance: sites.filter(s => s.analysis?.action_status === 'maintenance').length,
     pending: sites.filter(s => s.analysis_status === 'pending' || s.analysis_status === 'analyzing').length,
     errors: sites.filter(s => s.analysis_status === 'error').length,
   };
@@ -264,12 +329,13 @@ export function AnalysisPage() {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Security</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sec</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perf</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SEO</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vulns</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -285,11 +351,14 @@ export function AnalysisPage() {
                         </td>
                         <td className="px-4 py-3"><HealthScoreBadge score={site.analysis?.health_score ?? null} /></td>
                         <td className="px-4 py-3"><PriorityBadge priority={site.analysis?.priority_classification ?? null} /></td>
-                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.security_score} /></td>
-                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.performance_score} /></td>
-                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.seo_score ?? site.analysis?.wp_health_score} /></td>
+                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.security_score} max={30} /></td>
+                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.performance_score} max={30} /></td>
+                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.seo_score ?? site.analysis?.wp_health_score} max={20} /></td>
+                        <td className="px-4 py-3"><VulnCell count={site.analysis?.vulnerabilities_found} /></td>
+                        <td className="px-4 py-3">
+                          <ActionDropdown siteId={site.id} currentAction={site.analysis?.action_status ?? null} onUpdate={fetchSites} />
+                        </td>
                         <td className="px-4 py-3"><AnalysisStatusBadge status={site.analysis_status} /></td>
-                        <td className="px-4 py-3"><TagBadges tags={site.tags || []} size="sm" /></td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
                             <button

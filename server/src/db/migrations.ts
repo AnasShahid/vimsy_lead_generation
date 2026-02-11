@@ -146,6 +146,7 @@ export function runMigrations(db: Database.Database): void {
   const analysisNewColumns = [
     { name: 'availability_score', sql: 'ALTER TABLE site_analyses ADD COLUMN availability_score REAL' },
     { name: 'seo_score', sql: 'ALTER TABLE site_analyses ADD COLUMN seo_score REAL' },
+    { name: 'action_status', sql: 'ALTER TABLE site_analyses ADD COLUMN action_status TEXT' },
   ];
   for (const col of analysisNewColumns) {
     try {

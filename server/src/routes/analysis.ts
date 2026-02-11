@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { createJob, getJobById, listJobs, deleteJob } from '../db/queries/jobs';
 import { getSiteById, batchUpdateSites, listSites } from '../db/queries/sites';
-import { getAnalysisBySiteId, getAnalysesByJobId } from '../db/queries/analyses';
+import { getAnalysisBySiteId, getAnalysesByJobId, updateAnalysis } from '../db/queries/analyses';
 import { getTagsForSites } from '../db/queries/tags';
 import { cancelAnalysisJob } from '../workers/analysis-worker';
 
@@ -141,6 +141,8 @@ router.get('/sites', (req, res) => {
           wp_health_score: analysis.wp_health_score,
           seo_score: analysis.seo_score,
           availability_score: analysis.availability_score,
+          action_status: analysis.action_status,
+          vulnerabilities_found: analysis.vulnerabilities_found,
           analyzed_at: analysis.analyzed_at,
         } : null,
         tags: tags[site.id] || [],
@@ -258,6 +260,33 @@ router.post('/reanalyze', (req, res) => {
     });
 
     res.json({ success: true, data: { jobId: job.id, sitesCount: validSiteIds.length } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PATCH /api/analysis/sites/:id/action — update action_status for a site
+router.patch('/sites/:id/action', (req, res) => {
+  try {
+    const siteId = parseInt(req.params.id);
+    if (isNaN(siteId)) {
+      return res.status(400).json({ success: false, error: 'Invalid site ID' });
+    }
+
+    const { action_status } = req.body;
+    const validActions = ['qualified', 'manual_review', 'maintenance'];
+    if (!action_status || !validActions.includes(action_status)) {
+      return res.status(400).json({ success: false, error: `action_status must be one of: ${validActions.join(', ')}` });
+    }
+
+    const analysis = getAnalysisBySiteId(siteId);
+    if (!analysis) {
+      return res.status(404).json({ success: false, error: 'No analysis found for this site' });
+    }
+
+    updateAnalysis(analysis.id, { action_status });
+
+    res.json({ success: true, data: { siteId, action_status } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

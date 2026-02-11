@@ -42,7 +42,11 @@ None yet.
 
 ## Pending Todos
 
-None — all current todos complete.
+| Todo | Area | Priority |
+|------|------|----------|
+| Fix Analysis UI — Score Colors, Priority/Action System, Layout | client/analysis | high |
+
+## Recently Completed Todos
 
 | Todo | Area | Completed |
 |------|------|-----------|

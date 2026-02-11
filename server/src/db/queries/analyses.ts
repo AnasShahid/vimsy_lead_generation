@@ -45,7 +45,7 @@ export function updateAnalysis(id: number, data: Partial<Omit<SiteAnalysis, 'id'
     'wpscan_wp_version', 'wpscan_wp_version_status', 'wpscan_theme', 'wpscan_theme_version', 'wpscan_plugins', 'wpscan_users', 'wpscan_config_backups', 'wpscan_db_exports', 'wpscan_raw_data',
     'vulnerabilities_found', 'vulnerability_details',
     'security_score', 'performance_score', 'wp_health_score', 'availability_score', 'seo_score',
-    'analyzed_at',
+    'action_status', 'analyzed_at',
   ];
 
   const fields: string[] = [];

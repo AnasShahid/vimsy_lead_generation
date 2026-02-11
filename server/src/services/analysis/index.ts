@@ -164,6 +164,7 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
       wp_health_score: scoring.seoScore,
       seo_score: scoring.seoScore,
       availability_score: scoring.availabilityScore,
+      action_status: scoring.actionStatus,
       // Timestamp
       analyzed_at: new Date().toISOString(),
     });

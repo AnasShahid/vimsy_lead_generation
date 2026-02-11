@@ -13,6 +13,7 @@ export type EnrichmentProvider = 'hunter' | 'snov';
 export type EnrichmentStatus = 'pending' | 'enriching' | 'enriched' | 'error';
 export type AnalysisStatus = 'pending' | 'analyzing' | 'analyzed' | 'error';
 export type AnalysisPriority = 'critical' | 'high' | 'medium' | 'low';
+export type AnalysisAction = 'qualified' | 'manual_review' | 'maintenance';
 export type LeadPriority = 'hot' | 'warm' | 'cold';
 export type OutreachStatus = 'not_started' | 'in_progress' | 'done';
 
@@ -354,6 +355,8 @@ export interface SiteAnalysis {
   wp_health_score: number | null;
   availability_score: number | null;
   seo_score: number | null;
+  // Action status (auto-assigned, manually overridable)
+  action_status: AnalysisAction | null;
   // Timestamps
   analyzed_at: string | null;
   created_at: string;

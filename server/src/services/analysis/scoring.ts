@@ -4,7 +4,7 @@ import type { WPScanResult } from './wpscan';
 import type { VulnerabilityMatchResult } from './vulnerability-matcher';
 import type { SecurityHeadersResult } from './security-headers';
 import type { AvailabilityResult } from './availability';
-import type { AnalysisPriority } from '@vimsy/shared';
+import type { AnalysisPriority, AnalysisAction } from '@vimsy/shared';
 
 export interface ScoringInput {
   pagespeed: PageSpeedResult | null;
@@ -26,6 +26,7 @@ export interface ScoringOutput {
   /** Actual category points retained (out of 20) */
   availabilityScore: number;
   priorityClassification: AnalysisPriority;
+  actionStatus: AnalysisAction;
   breakdown: Record<string, number>;
   deductions: string[];
 }
@@ -88,6 +89,7 @@ export function calculateScore(input: ScoringInput): ScoringOutput {
 
   const healthScore = performanceScore + securityScore + seoScore + availabilityScore;
   const priorityClassification = classifyPriority(healthScore);
+  const actionStatus = classifyAction(healthScore);
 
   const breakdown: Record<string, number> = {
     performance_max: 30,
@@ -112,6 +114,7 @@ export function calculateScore(input: ScoringInput): ScoringOutput {
     seoScore,
     availabilityScore,
     priorityClassification,
+    actionStatus,
     breakdown,
     deductions,
   };
@@ -317,4 +320,10 @@ function classifyPriority(healthScore: number): AnalysisPriority {
   if (healthScore <= 60) return 'high';
   if (healthScore <= 75) return 'medium';
   return 'low';
+}
+
+function classifyAction(healthScore: number): AnalysisAction {
+  if (healthScore <= 60) return 'qualified';
+  if (healthScore <= 75) return 'manual_review';
+  return 'maintenance';
 }
