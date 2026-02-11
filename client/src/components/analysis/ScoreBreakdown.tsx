@@ -1,4 +1,4 @@
-import { Shield, Gauge, Code } from 'lucide-react';
+import { Shield, Gauge, Search, Wifi } from 'lucide-react';
 
 interface ScoreBreakdownProps {
   securityScore: number | null;
@@ -31,20 +31,20 @@ function ScoreCard({
   const pct = score !== null ? Math.min(100, Math.max(0, score)) : 0;
 
   return (
-    <div className={`rounded-lg border p-4 ${colors.bg} border-gray-200`}>
-      <div className="flex items-center justify-between mb-3">
+    <div className={`rounded-lg border p-3 ${colors.bg} border-gray-200`}>
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className={colors.text}>{icon}</span>
           <div>
-            <p className="text-sm font-medium text-gray-800">{label}</p>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wide">{weight} weight</p>
+            <p className="text-xs font-medium text-gray-800">{label}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide">{weight}</p>
           </div>
         </div>
-        <span className={`text-2xl font-bold ${colors.text}`}>
+        <span className={`text-xl font-bold ${colors.text}`}>
           {score !== null ? score : '—'}
         </span>
       </div>
-      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${score !== null ? colors.ring.replace('text-', 'bg-') : 'bg-gray-300'}`}
           style={{ width: `${pct}%` }}
@@ -60,24 +60,30 @@ export function ScoreBreakdown({
   wpHealthScore,
 }: ScoreBreakdownProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <ScoreCard
-        label="Security"
-        weight="40%"
-        score={securityScore}
-        icon={<Shield size={18} />}
-      />
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <ScoreCard
         label="Performance"
-        weight="30%"
+        weight="30 pts"
         score={performanceScore}
-        icon={<Gauge size={18} />}
+        icon={<Gauge size={16} />}
       />
       <ScoreCard
-        label="WP Health"
-        weight="30%"
+        label="Security"
+        weight="30 pts"
+        score={securityScore}
+        icon={<Shield size={16} />}
+      />
+      <ScoreCard
+        label="SEO"
+        weight="20 pts"
         score={wpHealthScore}
-        icon={<Code size={18} />}
+        icon={<Search size={16} />}
+      />
+      <ScoreCard
+        label="Availability"
+        weight="20 pts"
+        score={null}
+        icon={<Wifi size={16} />}
       />
     </div>
   );

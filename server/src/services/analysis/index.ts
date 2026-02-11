@@ -4,11 +4,15 @@ import { analyzePageSpeed } from './pagespeed';
 import { analyzeSSL } from './ssl-analyzer';
 import { runWPScan } from './wpscan';
 import { matchVulnerabilities } from './vulnerability-matcher';
+import { checkSecurityHeaders } from './security-headers';
+import { checkAvailability } from './availability';
 import { calculateScore } from './scoring';
 import type { PageSpeedResult } from './pagespeed';
 import type { SSLAnalysisResult } from './ssl-analyzer';
 import type { WPScanResult } from './wpscan';
 import type { VulnerabilityMatchResult } from './vulnerability-matcher';
+import type { SecurityHeadersResult } from './security-headers';
+import type { AvailabilityResult } from './availability';
 import type { ScoringOutput } from './scoring';
 
 export interface AnalysisResult {
@@ -21,7 +25,7 @@ export interface AnalysisResult {
 
 /**
  * Run full technical analysis on a single site.
- * Orchestrates PSI, SSL, WPScan, vulnerability matching, and scoring.
+ * Orchestrates: Availability, PSI, SSL, Security Headers, WPScan, Vuln Matching, Scoring.
  */
 export async function analyzeSite(siteId: number, analysisId: number): Promise<AnalysisResult> {
   const site = getSiteById(siteId);
@@ -39,8 +43,29 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
   let sslResult: SSLAnalysisResult | null = null;
   let wpscanResult: WPScanResult | null = null;
   let vulnResult: VulnerabilityMatchResult | null = null;
+  let secHeadersResult: SecurityHeadersResult | null = null;
+  let availabilityResult: AvailabilityResult | null = null;
 
-  // Step 1: PageSpeed Insights
+  // Step 1: Availability + Security Headers (run in parallel — fast HTTP checks)
+  try {
+    console.log(`[Analysis] Site ${siteId}: Checking availability & security headers...`);
+    const [availRes, headersRes] = await Promise.allSettled([
+      checkAvailability(url),
+      checkSecurityHeaders(url),
+    ]);
+    if (availRes.status === 'fulfilled') {
+      availabilityResult = availRes.value;
+      console.log(`[Analysis] Site ${siteId}: Availability — ${availabilityResult.isUp ? 'UP' : 'DOWN'} (${availabilityResult.responseTimeMs}ms)`);
+    }
+    if (headersRes.status === 'fulfilled') {
+      secHeadersResult = headersRes.value;
+      console.log(`[Analysis] Site ${siteId}: Security headers — ${secHeadersResult.presentHeaders.length}/${secHeadersResult.presentHeaders.length + secHeadersResult.missingHeaders.length} present`);
+    }
+  } catch (err: any) {
+    console.error(`[Analysis] Site ${siteId}: Availability/headers check failed: ${err.message}`);
+  }
+
+  // Step 2: PageSpeed Insights
   try {
     console.log(`[Analysis] Site ${siteId}: Running PageSpeed Insights...`);
     pagespeedResult = await analyzePageSpeed(url);
@@ -51,7 +76,7 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
     console.error(`[Analysis] Site ${siteId}: PSI failed: ${err.message}`);
   }
 
-  // Step 2: SSL/TLS Analysis
+  // Step 3: SSL/TLS Analysis
   try {
     console.log(`[Analysis] Site ${siteId}: Running SSL analysis...`);
     sslResult = await analyzeSSL(domain);
@@ -59,19 +84,21 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
     console.error(`[Analysis] Site ${siteId}: SSL analysis failed: ${err.message}`);
   }
 
-  // Step 3: WPScan (only for WordPress sites)
+  // Step 4: WPScan (only for WordPress sites)
   if (isWordPress) {
     try {
       console.log(`[Analysis] Site ${siteId}: Running WPScan...`);
       wpscanResult = await runWPScan(url);
       if (wpscanResult.error) {
         console.warn(`[Analysis] Site ${siteId}: WPScan warning: ${wpscanResult.error}`);
+      } else {
+        console.log(`[Analysis] Site ${siteId}: WPScan — WP ${wpscanResult.wpVersion || 'unknown'} (${wpscanResult.wpVersionStatus || 'unknown'}), ${wpscanResult.plugins.length} plugins`);
       }
     } catch (err: any) {
       console.error(`[Analysis] Site ${siteId}: WPScan failed: ${err.message}`);
     }
 
-    // Step 4: Vulnerability matching (only if WPScan returned data)
+    // Step 5: Vulnerability matching (only if WPScan returned data)
     if (wpscanResult && !wpscanResult.error) {
       try {
         console.log(`[Analysis] Site ${siteId}: Matching vulnerabilities...`);
@@ -82,7 +109,7 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
     }
   }
 
-  // Step 5: Calculate composite score
+  // Step 6: Calculate composite score
   let scoring: ScoringOutput;
   try {
     scoring = calculateScore({
@@ -90,13 +117,16 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
       ssl: sslResult,
       wpscan: wpscanResult,
       vulnerabilities: vulnResult,
+      securityHeaders: secHeadersResult,
+      availability: availabilityResult,
     });
+    console.log(`[Analysis] Site ${siteId}: Deductions: ${scoring.deductions.join('; ')}`);
   } catch (err: any) {
     console.error(`[Analysis] Site ${siteId}: Scoring failed: ${err.message}`);
     return { success: false, analysisId, error: `Scoring failed: ${err.message}` };
   }
 
-  // Step 6: Save results to site_analyses table
+  // Step 7: Save results to site_analyses table
   try {
     updateAnalysis(analysisId, {
       status: 'completed',
@@ -133,7 +163,7 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
       // Sub-scores
       security_score: scoring.securityScore,
       performance_score: scoring.performanceScore,
-      wp_health_score: scoring.wpHealthScore,
+      wp_health_score: scoring.seoScore,
       // Timestamp
       analyzed_at: new Date().toISOString(),
     });

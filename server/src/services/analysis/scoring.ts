@@ -2,6 +2,8 @@ import type { PageSpeedResult } from './pagespeed';
 import type { SSLAnalysisResult } from './ssl-analyzer';
 import type { WPScanResult } from './wpscan';
 import type { VulnerabilityMatchResult } from './vulnerability-matcher';
+import type { SecurityHeadersResult } from './security-headers';
+import type { AvailabilityResult } from './availability';
 import type { AnalysisPriority } from '@vimsy/shared';
 
 export interface ScoringInput {
@@ -9,179 +11,239 @@ export interface ScoringInput {
   ssl: SSLAnalysisResult | null;
   wpscan: WPScanResult | null;
   vulnerabilities: VulnerabilityMatchResult | null;
+  securityHeaders: SecurityHeadersResult | null;
+  availability: AvailabilityResult | null;
 }
 
 export interface ScoringOutput {
   healthScore: number;
   securityScore: number;
   performanceScore: number;
-  wpHealthScore: number;
+  seoScore: number;
+  availabilityScore: number;
   priorityClassification: AnalysisPriority;
   breakdown: Record<string, number>;
+  deductions: string[];
 }
 
-// Weights: Security 40%, Performance 30%, WordPress Health 30%
-const WEIGHT_SECURITY = 0.4;
-const WEIGHT_PERFORMANCE = 0.3;
-const WEIGHT_WP_HEALTH = 0.3;
-
-const NEUTRAL_SCORE = 50;
-
+/**
+ * Deduction-based scoring system (start at 100, deduct points).
+ * Based on vimsy_highlevel_plan.pdf page 13:
+ *
+ * Performance (30 points max deduction):
+ *   - Lighthouse score < 50: -30 points
+ *   - Lighthouse score 50-80: -15 points
+ *   - Lighthouse score > 80: full points (no deduction)
+ *
+ * Security (30 points max deduction):
+ *   - No SSL: -30 points
+ *   - Outdated WordPress (> 2 versions old): -15 points
+ *   - Missing security headers: -10 points
+ *   - SSL grade below B (expiring/weak): -5 points
+ *
+ * SEO (20 points max deduction):
+ *   - SEO score < 70: -20 points
+ *   - Missing meta descriptions: -5 points
+ *   - No sitemap: -5 points
+ *
+ * Availability (20 points max deduction):
+ *   - Site down: -20 points
+ *   - Slow response > 5s: -10 points
+ *
+ * Priority:
+ *   0-40: Critical (immediate outreach)
+ *   41-60: High (strong opportunity)
+ *   61-75: Medium (good opportunity)
+ *   76-100: Low (maintenance only)
+ */
 export function calculateScore(input: ScoringInput): ScoringOutput {
-  const securityScore = calculateSecurityScore(input.ssl, input.vulnerabilities, input.wpscan);
-  const performanceScore = calculatePerformanceScore(input.pagespeed);
-  const wpHealthScore = calculateWPHealthScore(input.wpscan);
+  const deductions: string[] = [];
 
-  const healthScore = Math.round(
-    securityScore * WEIGHT_SECURITY +
-    performanceScore * WEIGHT_PERFORMANCE +
-    wpHealthScore * WEIGHT_WP_HEALTH
+  // ── Performance (30 pts max deduction) ──
+  const perfDeduction = calculatePerformanceDeduction(input.pagespeed, deductions);
+
+  // ── Security (30 pts max deduction) ──
+  const secDeduction = calculateSecurityDeduction(
+    input.ssl, input.wpscan, input.securityHeaders, deductions
   );
 
-  const clampedHealth = Math.max(0, Math.min(100, healthScore));
-  const priorityClassification = classifyPriority(clampedHealth);
+  // ── SEO (20 pts max deduction) ──
+  const seoDeduction = calculateSEODeduction(input.pagespeed, input.availability, deductions);
+
+  // ── Availability (20 pts max deduction) ──
+  const availDeduction = calculateAvailabilityDeduction(input.availability, deductions);
+
+  const totalDeduction = perfDeduction + secDeduction + seoDeduction + availDeduction;
+  const healthScore = Math.max(0, Math.min(100, 100 - totalDeduction));
+  const priorityClassification = classifyPriority(healthScore);
+
+  // Sub-scores (each normalized to 0-100 for display)
+  const performanceScore = Math.max(0, Math.round(((30 - perfDeduction) / 30) * 100));
+  const securityScore = Math.max(0, Math.round(((30 - secDeduction) / 30) * 100));
+  const seoScore = Math.max(0, Math.round(((20 - seoDeduction) / 20) * 100));
+  const availabilityScore = Math.max(0, Math.round(((20 - availDeduction) / 20) * 100));
 
   const breakdown: Record<string, number> = {
-    security_weight: WEIGHT_SECURITY * 100,
-    performance_weight: WEIGHT_PERFORMANCE * 100,
-    wp_health_weight: WEIGHT_WP_HEALTH * 100,
-    security_raw: securityScore,
-    performance_raw: performanceScore,
-    wp_health_raw: wpHealthScore,
-    security_weighted: Math.round(securityScore * WEIGHT_SECURITY),
-    performance_weighted: Math.round(performanceScore * WEIGHT_PERFORMANCE),
-    wp_health_weighted: Math.round(wpHealthScore * WEIGHT_WP_HEALTH),
+    performance_max: 30,
+    performance_deduction: perfDeduction,
+    performance_score: 30 - perfDeduction,
+    security_max: 30,
+    security_deduction: secDeduction,
+    security_score: 30 - secDeduction,
+    seo_max: 20,
+    seo_deduction: seoDeduction,
+    seo_score: 20 - seoDeduction,
+    availability_max: 20,
+    availability_deduction: availDeduction,
+    availability_score: 20 - availDeduction,
+    total_deduction: totalDeduction,
   };
 
   return {
-    healthScore: clampedHealth,
-    securityScore: Math.round(securityScore),
-    performanceScore: Math.round(performanceScore),
-    wpHealthScore: Math.round(wpHealthScore),
+    healthScore,
+    securityScore,
+    performanceScore,
+    seoScore,
+    availabilityScore,
     priorityClassification,
     breakdown,
+    deductions,
   };
 }
 
-function calculateSecurityScore(
-  ssl: SSLAnalysisResult | null,
-  vulnerabilities: VulnerabilityMatchResult | null,
-  wpscan: WPScanResult | null
+function calculatePerformanceDeduction(
+  pagespeed: PageSpeedResult | null,
+  deductions: string[]
 ): number {
-  if (!ssl && !vulnerabilities && !wpscan) return NEUTRAL_SCORE;
-
-  let score = 0;
-  let maxPoints = 0;
-
-  // SSL component (30 points max)
-  maxPoints += 30;
-  if (ssl) {
-    if (ssl.valid && ssl.daysUntilExpiry !== null && ssl.daysUntilExpiry > 30) {
-      score += 30;
-    } else if (ssl.valid && ssl.daysUntilExpiry !== null && ssl.daysUntilExpiry > 0) {
-      score += 15; // Expiring soon
-    }
-    // Expired or invalid = 0 points
-  } else {
-    score += 15; // Unknown SSL = neutral
+  if (!pagespeed || pagespeed.error) {
+    // No data available — apply moderate deduction
+    deductions.push('Performance: No PageSpeed data available (-15)');
+    return 15;
   }
 
-  // Vulnerability component (30 points max)
-  maxPoints += 30;
-  if (vulnerabilities) {
-    let vulnDeduction = 0;
-    vulnDeduction += vulnerabilities.criticalCount * 15;
-    vulnDeduction += vulnerabilities.highCount * 10;
-    vulnDeduction += vulnerabilities.mediumCount * 5;
-    vulnDeduction += vulnerabilities.lowCount * 2;
-    score += Math.max(0, 30 - vulnDeduction);
-  } else {
-    score += 15; // No vuln data = neutral
-  }
+  const lighthouseScore = pagespeed.performance;
 
-  // Config/DB exposure component (20 points max each = 40 total)
-  maxPoints += 40;
-  if (wpscan) {
-    if (wpscan.configBackups.length === 0) {
-      score += 20;
-    }
-    if (wpscan.dbExports.length === 0) {
-      score += 20;
-    }
-  } else {
-    score += 20; // Unknown = neutral
+  if (lighthouseScore < 50) {
+    deductions.push(`Performance: Lighthouse score ${lighthouseScore} (< 50) (-30)`);
+    return 30;
   }
-
-  // Normalize to 0-100
-  return maxPoints > 0 ? (score / maxPoints) * 100 : NEUTRAL_SCORE;
+  if (lighthouseScore <= 80) {
+    deductions.push(`Performance: Lighthouse score ${lighthouseScore} (50-80) (-15)`);
+    return 15;
+  }
+  // > 80 = full points, no deduction
+  return 0;
 }
 
-function calculatePerformanceScore(pagespeed: PageSpeedResult | null): number {
-  if (!pagespeed || pagespeed.error) return NEUTRAL_SCORE;
+function calculateSecurityDeduction(
+  ssl: SSLAnalysisResult | null,
+  wpscan: WPScanResult | null,
+  securityHeaders: SecurityHeadersResult | null,
+  deductions: string[]
+): number {
+  let deduction = 0;
 
-  // Weighted: performance 40%, accessibility 20%, SEO 20%, best practices 20%
-  return (
-    pagespeed.performance * 0.4 +
-    pagespeed.accessibility * 0.2 +
-    pagespeed.seo * 0.2 +
-    pagespeed.bestPractices * 0.2
-  );
+  // No SSL: -30 points
+  if (!ssl || !ssl.valid) {
+    deductions.push('Security: No valid SSL certificate (-30)');
+    deduction += 30;
+    return Math.min(deduction, 30); // Cap at 30
+  }
+
+  // SSL grade below B (expiring soon or weak protocol): -5 points
+  const sslWeak = (ssl.daysUntilExpiry !== null && ssl.daysUntilExpiry <= 30) ||
+    (ssl.protocolVersion && ['TLSv1', 'TLSv1.1', 'SSLv3'].includes(ssl.protocolVersion)) ||
+    ssl.selfSigned;
+  if (sslWeak) {
+    deductions.push('Security: SSL grade below B (expiring/weak/self-signed) (-5)');
+    deduction += 5;
+  }
+
+  // Outdated WordPress (> 2 versions old): -15 points
+  if (wpscan && wpscan.wpVersionsBehind > 2) {
+    deductions.push(`Security: Outdated WordPress (${wpscan.wpVersionsBehind} versions behind) (-15)`);
+    deduction += 15;
+  } else if (wpscan && wpscan.wpVersionStatus === 'insecure') {
+    deductions.push('Security: Insecure WordPress version (-15)');
+    deduction += 15;
+  }
+
+  // Missing security headers: -10 points
+  if (securityHeaders && securityHeaders.missingHeaders.length >= 3) {
+    deductions.push(`Security: Missing ${securityHeaders.missingHeaders.length} security headers (-10)`);
+    deduction += 10;
+  } else if (!securityHeaders) {
+    deductions.push('Security: Could not check security headers (-5)');
+    deduction += 5;
+  }
+
+  return Math.min(deduction, 30); // Cap at 30
 }
 
-function calculateWPHealthScore(wpscan: WPScanResult | null): number {
-  if (!wpscan || wpscan.error) return NEUTRAL_SCORE;
+function calculateSEODeduction(
+  pagespeed: PageSpeedResult | null,
+  availability: AvailabilityResult | null,
+  deductions: string[]
+): number {
+  let deduction = 0;
 
-  let score = 0;
-  let maxPoints = 0;
-
-  // WP version status (30 points)
-  maxPoints += 30;
-  if (wpscan.wpVersionStatus === 'latest') {
-    score += 30;
-  } else if (wpscan.wpVersionStatus === 'outdated') {
-    score += 15;
-  }
-  // 'insecure' = 0 points
-
-  // Plugin health (30 points)
-  maxPoints += 30;
-  const pluginCount = wpscan.plugins.length;
-  const outdatedPlugins = wpscan.plugins.filter(p => p.outdated).length;
-
-  let pluginScore = 30;
-  // Plugin count penalty
-  if (pluginCount > 30) {
-    pluginScore -= 20;
-  } else if (pluginCount > 20) {
-    pluginScore -= 10;
-  }
-  // Outdated plugin penalty
-  pluginScore -= outdatedPlugins * 3;
-  score += Math.max(0, pluginScore);
-
-  // Theme status (20 points)
-  maxPoints += 20;
-  if (wpscan.mainTheme) {
-    score += 20; // Theme detected = base points (outdated check would need version comparison)
+  // SEO score < 70: -20 points
+  if (pagespeed && !pagespeed.error) {
+    if (pagespeed.seo < 70) {
+      deductions.push(`SEO: Score ${pagespeed.seo} (< 70) (-20)`);
+      deduction += 20;
+      return Math.min(deduction, 20); // Already at max
+    }
   } else {
-    score += 10; // No theme info = partial
+    // No PSI data — moderate deduction
+    deductions.push('SEO: No PageSpeed SEO data available (-10)');
+    deduction += 10;
   }
 
-  // User enumeration (20 points)
-  maxPoints += 20;
-  if (wpscan.users.length === 0) {
-    score += 20; // No exposed users
-  } else {
-    score += Math.max(0, 20 - wpscan.users.length * 5);
+  // Missing meta descriptions: -5 points
+  if (availability && !availability.hasMetaDescription) {
+    deductions.push('SEO: Missing meta description (-5)');
+    deduction += 5;
   }
 
-  // Normalize to 0-100
-  return maxPoints > 0 ? (score / maxPoints) * 100 : NEUTRAL_SCORE;
+  // No sitemap: -5 points
+  if (availability && !availability.hasSitemap) {
+    deductions.push('SEO: No sitemap found (-5)');
+    deduction += 5;
+  }
+
+  return Math.min(deduction, 20); // Cap at 20
+}
+
+function calculateAvailabilityDeduction(
+  availability: AvailabilityResult | null,
+  deductions: string[]
+): number {
+  if (!availability || availability.error) {
+    deductions.push('Availability: Site unreachable (-20)');
+    return 20;
+  }
+
+  let deduction = 0;
+
+  // Site down: -20 points
+  if (!availability.isUp) {
+    deductions.push(`Availability: Site down (status ${availability.statusCode}) (-20)`);
+    return 20;
+  }
+
+  // Slow response > 5s: -10 points
+  if (availability.responseTimeMs > 5000) {
+    deductions.push(`Availability: Slow response ${Math.round(availability.responseTimeMs / 1000)}s (> 5s) (-10)`);
+    deduction += 10;
+  }
+
+  return Math.min(deduction, 20); // Cap at 20
 }
 
 function classifyPriority(healthScore: number): AnalysisPriority {
-  if (healthScore < 40) return 'critical';
-  if (healthScore < 55) return 'high';
-  if (healthScore < 75) return 'medium';
+  if (healthScore <= 40) return 'critical';
+  if (healthScore <= 60) return 'high';
+  if (healthScore <= 75) return 'medium';
   return 'low';
 }
