@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { createJob, listActiveAndRecentJobs } from '../db/queries/jobs';
+import { createJob, getJobById, listActiveAndRecentJobs, updateJobStatus } from '../db/queries/jobs';
 import { listReports, getReportBySiteId, updateReport } from '../db/queries/reports';
 import { getSiteById } from '../db/queries/sites';
 import { getAnalysisBySiteId } from '../db/queries/analyses';
@@ -100,15 +100,26 @@ reportRoutes.get('/jobs', (_req: Request, res: Response) => {
   }
 });
 
-// DELETE /api/reports/jobs/:jobId — Cancel a report job
+// DELETE /api/reports/jobs/:jobId — Cancel a report job (running or pending)
 reportRoutes.delete('/jobs/:jobId', (req: Request, res: Response) => {
   try {
     const { jobId } = req.params;
-    const cancelled = cancelReportJob(jobId);
-    if (cancelled) {
+
+    // Try to cancel a running job via its AbortController
+    const cancelledRunning = cancelReportJob(jobId);
+    if (cancelledRunning) {
+      updateJobStatus(jobId, 'cancelled', 'Cancelled by user');
       return res.json({ success: true, data: { cancelled: true } });
     }
-    return res.status(404).json({ success: false, error: 'Job not found or not running' });
+
+    // If not running in-memory, check if it's a pending job in DB
+    const job = getJobById(jobId);
+    if (job && (job.status === 'pending' || job.status === 'running')) {
+      updateJobStatus(jobId, 'cancelled', 'Cancelled by user');
+      return res.json({ success: true, data: { cancelled: true } });
+    }
+
+    return res.status(404).json({ success: false, error: 'Job not found or already completed' });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

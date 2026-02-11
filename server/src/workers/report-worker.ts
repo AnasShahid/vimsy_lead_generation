@@ -5,6 +5,8 @@ import { createReport } from '../db/queries/reports';
 import { generateSiteReport } from '../services/report';
 
 const POLL_INTERVAL_MS = 2000;
+/** Number of reports to generate concurrently within a job */
+const REPORT_CONCURRENCY = 3;
 
 let pollTimer: NodeJS.Timeout | null = null;
 const runningJobs = new Map<string, AbortController>();
@@ -36,7 +38,7 @@ export function cancelReportJob(jobId: string): boolean {
 }
 
 async function processNextJob(): Promise<void> {
-  // Only one report job at a time (heavy: AI call + Puppeteer)
+  // Only one report job at a time
   if (runningJobs.size > 0) return;
 
   const job = getNextPendingJob('report');
@@ -59,6 +61,23 @@ async function processNextJob(): Promise<void> {
   }
 }
 
+/**
+ * Process a single site report. Returns success/failure.
+ */
+async function processSingleSite(siteId: number, jobId: string): Promise<boolean> {
+  const report = createReport(siteId, jobId);
+  try {
+    const result = await generateSiteReport(siteId, report.id);
+    if (!result.success) {
+      console.error(`[Report Worker] Site ${siteId}: ${result.error}`);
+    }
+    return result.success;
+  } catch (err: any) {
+    console.error(`[Report Worker] Site ${siteId} threw: ${err.message}`);
+    return false;
+  }
+}
+
 async function runReportJob(job: Job, signal: AbortSignal): Promise<void> {
   const config = job.config as unknown as ReportJobConfig;
   if (!config || !config.siteIds || config.siteIds.length === 0) {
@@ -76,31 +95,33 @@ async function runReportJob(job: Job, signal: AbortSignal): Promise<void> {
 
   let completedCount = 0;
   let errorCount = 0;
+  let processedCount = 0;
 
-  // Process sites sequentially (Puppeteer is memory-heavy)
-  for (let i = 0; i < siteIds.length; i++) {
+  // Process sites in parallel batches
+  for (let i = 0; i < siteIds.length; i += REPORT_CONCURRENCY) {
     if (signal.aborted) return;
 
-    const siteId = siteIds[i];
+    const batch = siteIds.slice(i, i + REPORT_CONCURRENCY);
 
-    // Create report record
-    const report = createReport(siteId, job.id);
+    console.log(`[Report Worker] Job ${job.id}: Processing batch ${Math.floor(i / REPORT_CONCURRENCY) + 1} (${batch.length} sites)`);
 
-    try {
-      const result = await generateSiteReport(siteId, report.id);
+    const results = await Promise.allSettled(
+      batch.map(siteId => processSingleSite(siteId, job.id))
+    );
 
-      if (result.success) {
+    for (const result of results) {
+      processedCount++;
+      if (result.status === 'fulfilled' && result.value) {
         completedCount++;
       } else {
         errorCount++;
-        console.error(`[Report Worker] Site ${siteId}: ${result.error}`);
       }
-    } catch (err: any) {
-      errorCount++;
-      console.error(`[Report Worker] Site ${siteId} threw: ${err.message}`);
     }
 
-    updateJobProgress(job.id, i + 1, totalSites);
+    updateJobProgress(job.id, processedCount, totalSites);
+
+    // Check abort after each batch
+    if (signal.aborted) return;
   }
 
   if (errorCount === totalSites) {

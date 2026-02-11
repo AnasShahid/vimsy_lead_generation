@@ -136,3 +136,19 @@ export function deleteJob(id: string): boolean {
   const result = db.prepare('DELETE FROM jobs WHERE id = ?').run(id);
   return result.changes > 0;
 }
+
+/**
+ * Mark any running/pending jobs as failed on server startup.
+ * These are stale from a previous process that was killed.
+ */
+export function cleanupStaleJobs(): number {
+  const db = getDb();
+  const result = db.prepare(`
+    UPDATE jobs
+    SET status = 'failed',
+        error = 'Server restarted — job was interrupted',
+        completed_at = datetime('now')
+    WHERE status IN ('running', 'pending')
+  `).run();
+  return result.changes;
+}

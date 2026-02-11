@@ -3,6 +3,7 @@ dotenv.config({ path: '../.env' });
 
 import { app } from './app';
 import { getDb, closeDb } from './db';
+import { cleanupStaleJobs } from './db/queries/jobs';
 import { startDiscoveryWorker, stopDiscoveryWorker } from './workers/discovery-worker';
 import { startEnrichmentWorker, stopEnrichmentWorker } from './workers/enrichment-worker';
 import { startAnalysisWorker, stopAnalysisWorker } from './workers/analysis-worker';
@@ -14,6 +15,12 @@ const PORT = process.env.PORT || 3001;
 // Initialize DB
 getDb();
 console.log('[DB] Database initialized');
+
+// Clean up any jobs left running/pending from a previous server session
+const staleCount = cleanupStaleJobs();
+if (staleCount > 0) {
+  console.log(`[DB] Cleaned up ${staleCount} stale job(s) from previous session`);
+}
 
 // Start background workers
 startDiscoveryWorker();

@@ -1,9 +1,7 @@
 import { getSiteById, upsertSite } from '../db/queries/sites';
 import { getAIModel, getAIPrompt } from '../db/queries/settings';
+import { chatCompletion, OpenRouterAPIError } from './openrouter';
 import type { Site, LeadPriority, ProgressCallback } from '@vimsy/shared';
-
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const REQUEST_TIMEOUT_MS = 120_000;
 
 function buildSiteContext(site: Site): string {
   const parts = [
@@ -19,13 +17,6 @@ function buildSiteContext(site: Site): string {
   return parts.filter(Boolean).join('\n');
 }
 
-function getOpenRouterApiKey(): string {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY environment variable is required for AI analysis');
-  }
-  return apiKey;
-}
 
 /**
  * Infer country from domain TLD.
@@ -46,7 +37,6 @@ export async function analyzeSites(
   siteIds: number[],
   onProgress?: ProgressCallback
 ): Promise<void> {
-  const apiKey = getOpenRouterApiKey();
   const model = getAIModel();
   const prompt = getAIPrompt();
   const BATCH_SIZE = 5;
@@ -67,36 +57,17 @@ export async function analyzeSites(
       .join('\n\n');
 
     try {
-      const response = await fetch(OPENROUTER_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://vimsy.com',
-          'X-Title': 'Vimsy Lead Gen',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: prompt },
-            { role: 'user', content: userMessage },
-          ],
-          temperature: 0.3,
-          response_format: { type: 'json_object' },
-          stream: false,
-        }),
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      const result = await chatCompletion({
+        model,
+        messages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.3,
+        jsonMode: true,
       });
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        const err: any = new Error(`OpenRouter API error ${response.status}: ${errorBody.slice(0, 300)}`);
-        err.statusCode = response.status;
-        throw err;
-      }
-
-      const data: any = await response.json();
-      const content = data?.choices?.[0]?.message?.content;
+      const content = result.content;
       if (!content) {
         console.warn('[AI] Empty response for batch starting at index', i);
         continue;
@@ -134,8 +105,7 @@ export async function analyzeSites(
         }
       }
     } catch (err: any) {
-      const statusCode = err.statusCode || err.status;
-      if (statusCode === 429) {
+      if (err instanceof OpenRouterAPIError && err.statusCode === 429) {
         console.warn('[AI] Rate limited, waiting 30s...');
         await new Promise(r => setTimeout(r, 30000));
         i -= BATCH_SIZE; // retry this batch
