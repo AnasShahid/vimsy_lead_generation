@@ -252,6 +252,9 @@ export function runMigrations(db: Database.Database): void {
     { name: 'priority_classification', sql: 'ALTER TABLE site_reports ADD COLUMN priority_classification TEXT' },
     { name: 'error', sql: 'ALTER TABLE site_reports ADD COLUMN error TEXT' },
     { name: 'generated_at', sql: 'ALTER TABLE site_reports ADD COLUMN generated_at TEXT' },
+    { name: 'gcs_path', sql: 'ALTER TABLE site_reports ADD COLUMN gcs_path TEXT' },
+    { name: 'gcs_url', sql: 'ALTER TABLE site_reports ADD COLUMN gcs_url TEXT' },
+    { name: 'gcs_url_expires', sql: 'ALTER TABLE site_reports ADD COLUMN gcs_url_expires TEXT' },
   ];
   for (const col of reportTableColumns) {
     try {

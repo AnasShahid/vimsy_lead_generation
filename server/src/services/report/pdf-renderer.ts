@@ -17,6 +17,7 @@ export interface RenderReportInput {
 export interface RenderReportOutput {
   pdfPath: string;
   pdfFilename: string;
+  fullPath: string;
 }
 
 // --- Browser Lifecycle ---
@@ -303,5 +304,6 @@ export async function renderReportPdf(input: RenderReportInput): Promise<RenderR
   return {
     pdfPath: relativePath,
     pdfFilename,
+    fullPath,
   };
 }

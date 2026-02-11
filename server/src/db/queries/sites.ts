@@ -235,7 +235,7 @@ export function batchUpdateSites(ids: number[], updates: Record<string, any>): n
   const db = getDb();
   if (ids.length === 0) return 0;
 
-  const allowedFields = ['priority', 'outreach_status', 'pipeline_stage', 'enrichment_status', 'analysis_status', 'notes', 'company_name', 'industry_segment'];
+  const allowedFields = ['priority', 'outreach_status', 'pipeline_stage', 'enrichment_status', 'analysis_status', 'report_status', 'notes', 'company_name', 'industry_segment'];
   const fields: string[] = [];
   const values: any[] = [];
 

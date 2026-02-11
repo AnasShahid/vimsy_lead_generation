@@ -31,7 +31,7 @@ export function getJobById(id: string): Job | null {
   };
 }
 
-export function listJobs(filters?: { type?: JobType; status?: JobStatus }): Job[] {
+export function listJobs(filters?: { type?: JobType; status?: JobStatus; limit?: number }): Job[] {
   const db = getDb();
   let query = 'SELECT * FROM jobs WHERE 1=1';
   const params: any[] = [];
@@ -47,8 +47,45 @@ export function listJobs(filters?: { type?: JobType; status?: JobStatus }): Job[
 
   query += ' ORDER BY created_at DESC';
 
+  if (filters?.limit) {
+    query += ' LIMIT ?';
+    params.push(filters.limit);
+  }
+
   const rows = db.prepare(query).all(...params) as any[];
   return rows.map(row => ({
+    ...row,
+    config: row.config ? JSON.parse(row.config) : null,
+  }));
+}
+
+/**
+ * Return active (pending/running) jobs + the most recent completed/failed jobs.
+ * This avoids returning the entire job history during polling.
+ */
+export function listActiveAndRecentJobs(type: JobType, recentLimit: number = 5): Job[] {
+  const db = getDb();
+
+  // Active jobs (pending or running)
+  const activeRows = db.prepare(
+    `SELECT * FROM jobs WHERE type = ? AND status IN ('pending', 'running') ORDER BY created_at DESC`
+  ).all(type) as any[];
+
+  // Recent completed/failed/cancelled jobs
+  const recentRows = db.prepare(
+    `SELECT * FROM jobs WHERE type = ? AND status NOT IN ('pending', 'running') ORDER BY created_at DESC LIMIT ?`
+  ).all(type, recentLimit) as any[];
+
+  const allRows = [...activeRows, ...recentRows];
+  // Deduplicate by id (in case a job transitions during the two queries)
+  const seen = new Set<string>();
+  const unique = allRows.filter(row => {
+    if (seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
+
+  return unique.map(row => ({
     ...row,
     config: row.config ? JSON.parse(row.config) : null,
   }));

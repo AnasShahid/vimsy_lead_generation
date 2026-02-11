@@ -6,11 +6,13 @@ import { batchUpdateSites } from '../../db/queries/sites';
 import { addTag } from '../../db/queries/tags';
 import { generateReportContent } from './ai-report-generator';
 import { renderReportPdf } from './pdf-renderer';
+import { uploadReportToGCS } from '../gcs';
 
 export interface ReportResult {
   success: boolean;
   reportId: number;
   pdfPath?: string;
+  gcsUrl?: string;
   error?: string;
 }
 
@@ -83,7 +85,16 @@ export async function generateSiteReport(
       return { success: false, reportId, error };
     }
 
-    // 7. Update report as completed
+    // 7. Upload to Google Cloud Storage
+    let gcsResult;
+    try {
+      gcsResult = await uploadReportToGCS(pdfResult.fullPath, pdfResult.pdfFilename);
+    } catch (err: any) {
+      console.warn(`[Report] GCS upload failed (keeping local file): ${err.message}`);
+      // GCS upload is non-fatal — report still completes with local file
+    }
+
+    // 8. Update report as completed
     updateReport(reportId, {
       status: 'completed',
       pdf_path: pdfResult.pdfPath,
@@ -91,15 +102,20 @@ export async function generateSiteReport(
       health_score: analysis.health_score,
       priority_classification: analysis.priority_classification,
       generated_at: new Date().toISOString(),
+      ...(gcsResult ? {
+        gcs_path: gcsResult.gcsPath,
+        gcs_url: gcsResult.gcsUrl,
+        gcs_url_expires: gcsResult.gcsUrlExpires,
+      } : {}),
     });
 
-    // 8. Update site status
+    // 9. Update site status
     batchUpdateSites([siteId], { report_status: 'completed' });
     addTag(siteId, 'reported');
 
-    console.log(`[Report] Report completed for site ${siteId} (${site.domain}) → ${pdfResult.pdfFilename}`);
+    console.log(`[Report] Report completed for site ${siteId} (${site.domain}) → ${pdfResult.pdfFilename}${gcsResult ? ' [GCS ✓]' : ' [local only]'}`);
 
-    return { success: true, reportId, pdfPath: pdfResult.pdfPath };
+    return { success: true, reportId, pdfPath: pdfResult.pdfPath, gcsUrl: gcsResult?.gcsUrl };
   } catch (err: any) {
     const error = `Unexpected error: ${err.message}`;
     console.error(`[Report] ${error}`);

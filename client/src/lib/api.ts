@@ -279,4 +279,7 @@ export const api = {
   getReportPdfUrl: (siteId: number) => `${BASE_URL}/reports/${siteId}/pdf`,
 
   getReportDownloadUrl: (siteId: number) => `${BASE_URL}/reports/${siteId}/download`,
+
+  getReportSignedUrl: (siteId: number, disposition: 'inline' | 'attachment' = 'inline') =>
+    request<any>(`/reports/${siteId}/signed-url?disposition=${disposition}`),
 };

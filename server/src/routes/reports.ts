@@ -2,11 +2,12 @@ import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { createJob, listJobs } from '../db/queries/jobs';
-import { listReports, getReportBySiteId } from '../db/queries/reports';
+import { createJob, listActiveAndRecentJobs } from '../db/queries/jobs';
+import { listReports, getReportBySiteId, updateReport } from '../db/queries/reports';
 import { getSiteById } from '../db/queries/sites';
 import { getAnalysisBySiteId } from '../db/queries/analyses';
 import { cancelReportJob } from '../workers/report-worker';
+import { generateSignedUrl, generateDownloadSignedUrl, isSignedUrlExpired } from '../services/gcs';
 
 export const reportRoutes = Router();
 
@@ -89,10 +90,10 @@ reportRoutes.get('/', (req: Request, res: Response) => {
   }
 });
 
-// GET /api/reports/jobs — List report jobs
+// GET /api/reports/jobs — List active + recent report jobs (not full history)
 reportRoutes.get('/jobs', (_req: Request, res: Response) => {
   try {
-    const jobs = listJobs({ type: 'report' });
+    const jobs = listActiveAndRecentJobs('report', 5);
     return res.json({ success: true, data: jobs });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
@@ -133,7 +134,8 @@ reportRoutes.get('/:siteId', (req: Request, res: Response) => {
 });
 
 // GET /api/reports/:siteId/pdf — Serve PDF inline for viewing
-reportRoutes.get('/:siteId/pdf', (req: Request, res: Response) => {
+// If GCS is available, redirects to a signed URL; otherwise serves local file
+reportRoutes.get('/:siteId/pdf', async (req: Request, res: Response) => {
   try {
     const siteId = Number(req.params.siteId);
     if (isNaN(siteId)) {
@@ -141,10 +143,26 @@ reportRoutes.get('/:siteId/pdf', (req: Request, res: Response) => {
     }
 
     const report = getReportBySiteId(siteId);
-    if (!report || report.status !== 'completed' || !report.pdf_path) {
-      return res.status(404).json({ success: false, error: 'No completed report with PDF found' });
+    if (!report || report.status !== 'completed') {
+      return res.status(404).json({ success: false, error: 'No completed report found' });
     }
 
+    // Prefer GCS signed URL
+    if (report.gcs_path) {
+      let url = report.gcs_url;
+      // Refresh signed URL if expired
+      if (!url || isSignedUrlExpired(report.gcs_url_expires)) {
+        const fresh = await generateSignedUrl(report.gcs_path);
+        updateReport(report.id, { gcs_url: fresh.url, gcs_url_expires: fresh.expires });
+        url = fresh.url;
+      }
+      return res.redirect(url);
+    }
+
+    // Fallback to local file
+    if (!report.pdf_path) {
+      return res.status(404).json({ success: false, error: 'No PDF found for this report' });
+    }
     const fullPath = path.resolve(DATA_DIR, report.pdf_path);
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ success: false, error: 'PDF file not found on disk' });
@@ -159,7 +177,8 @@ reportRoutes.get('/:siteId/pdf', (req: Request, res: Response) => {
 });
 
 // GET /api/reports/:siteId/download — Download PDF as attachment
-reportRoutes.get('/:siteId/download', (req: Request, res: Response) => {
+// If GCS is available, redirects to a signed download URL; otherwise serves local file
+reportRoutes.get('/:siteId/download', async (req: Request, res: Response) => {
   try {
     const siteId = Number(req.params.siteId);
     if (isNaN(siteId)) {
@@ -167,10 +186,29 @@ reportRoutes.get('/:siteId/download', (req: Request, res: Response) => {
     }
 
     const report = getReportBySiteId(siteId);
-    if (!report || report.status !== 'completed' || !report.pdf_path) {
-      return res.status(404).json({ success: false, error: 'No completed report with PDF found' });
+    if (!report || report.status !== 'completed') {
+      return res.status(404).json({ success: false, error: 'No completed report found' });
     }
 
+    // Prefer GCS signed download URL (always generate fresh for attachment disposition)
+    if (report.gcs_path && report.pdf_filename) {
+      // For downloads we generate a fresh attachment-disposition URL each time,
+      // but we also refresh the cached inline URL if it's expired
+      const downloadUrl = await generateDownloadSignedUrl(report.gcs_path, report.pdf_filename);
+
+      // Opportunistically refresh the cached inline URL if expired
+      if (!report.gcs_url || isSignedUrlExpired(report.gcs_url_expires)) {
+        const fresh = await generateSignedUrl(report.gcs_path);
+        updateReport(report.id, { gcs_url: fresh.url, gcs_url_expires: fresh.expires });
+      }
+
+      return res.redirect(downloadUrl.url);
+    }
+
+    // Fallback to local file
+    if (!report.pdf_path) {
+      return res.status(404).json({ success: false, error: 'No PDF found for this report' });
+    }
     const fullPath = path.resolve(DATA_DIR, report.pdf_path);
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ success: false, error: 'PDF file not found on disk' });
@@ -179,6 +217,56 @@ reportRoutes.get('/:siteId/download', (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${report.pdf_filename}"`);
     return res.sendFile(fullPath);
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/reports/:siteId/signed-url — Get a fresh signed URL (for services/email)
+reportRoutes.get('/:siteId/signed-url', async (req: Request, res: Response) => {
+  try {
+    const siteId = Number(req.params.siteId);
+    if (isNaN(siteId)) {
+      return res.status(400).json({ success: false, error: 'Invalid siteId' });
+    }
+
+    const report = getReportBySiteId(siteId);
+    if (!report || report.status !== 'completed' || !report.gcs_path) {
+      return res.status(404).json({ success: false, error: 'No completed report with GCS storage found' });
+    }
+
+    const disposition = req.query.disposition === 'attachment' ? 'attachment' : 'inline';
+    let url: string;
+    let expires: string;
+
+    if (disposition === 'inline') {
+      // Use cached inline URL if still valid
+      if (report.gcs_url && !isSignedUrlExpired(report.gcs_url_expires)) {
+        url = report.gcs_url;
+        expires = report.gcs_url_expires!;
+      } else {
+        const fresh = await generateSignedUrl(report.gcs_path);
+        updateReport(report.id, { gcs_url: fresh.url, gcs_url_expires: fresh.expires });
+        url = fresh.url;
+        expires = fresh.expires;
+      }
+    } else {
+      // Attachment disposition — always generate fresh (different Content-Disposition header)
+      const fresh = report.pdf_filename
+        ? await generateDownloadSignedUrl(report.gcs_path, report.pdf_filename)
+        : await generateSignedUrl(report.gcs_path);
+      url = fresh.url;
+      expires = fresh.expires;
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        url,
+        expires,
+        disposition,
+      },
+    });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

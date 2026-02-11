@@ -332,6 +332,9 @@ export interface SiteReport {
   ai_pitch: string | null;
   health_score: number | null;
   priority_classification: string | null;
+  gcs_path: string | null;
+  gcs_url: string | null;
+  gcs_url_expires: string | null;
   error: string | null;
   generated_at: string | null;
   created_at: string;

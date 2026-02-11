@@ -50,6 +50,7 @@ export function updateReport(id: number, data: Partial<Omit<SiteReport, 'id' | '
     'status', 'pdf_filename', 'pdf_path',
     'ai_executive_summary', 'ai_recommendations', 'ai_pitch',
     'health_score', 'priority_classification',
+    'gcs_path', 'gcs_url', 'gcs_url_expires',
     'error', 'generated_at',
   ];
 

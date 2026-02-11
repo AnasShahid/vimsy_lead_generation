@@ -8,6 +8,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
     "@openrouter/sdk": "^0.8.0",
     "@vimsy/shared": "1.0.0",
     "better-sqlite3": "^11.7.0",

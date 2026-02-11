@@ -137,7 +137,7 @@ export function ReportsPage() {
 
   const hasActiveJobs = jobs.some((j: any) => j.status === 'pending' || j.status === 'running');
   const hasPendingSites = sites.some((s: any) => s.report_status === 'pending' || s.report_status === 'generating');
-  usePolling(() => { fetchSites(); fetchJobs(); }, 3000, hasActiveJobs || hasPendingSites);
+  usePolling(() => { fetchSites(); fetchJobs(); }, 5000, hasActiveJobs || hasPendingSites);
 
   // Filter sites: only show analyzed sites
   const analyzedSites = sites.filter((s: any) => s.analysis_status === 'analyzed');
