@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { api } from '../lib/api';
-import { RotateCcw, Save, Check, Shield, Download, Loader2 } from 'lucide-react';
+import { RotateCcw, Save, Check, Shield, Download, Loader2, Brain, Database } from 'lucide-react';
 
 interface AIModel {
   id: string;
@@ -10,7 +10,15 @@ interface AIModel {
   tier: string;
 }
 
+type SettingsTab = 'ai' | 'security';
+
+const TABS: { key: SettingsTab; label: string; icon: React.ReactNode; description: string }[] = [
+  { key: 'ai', label: 'AI Analysis', icon: <Brain size={18} />, description: 'Model & prompt configuration' },
+  { key: 'security', label: 'Security Database', icon: <Database size={18} />, description: 'Vulnerability data management' },
+];
+
 export function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('ai');
   const [aiModel, setAiModel] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [models, setModels] = useState<AIModel[]>([]);
@@ -112,151 +120,201 @@ export function SettingsPage() {
     <div>
       <Header title="Settings" subtitle="Configure platform settings" />
 
-      <div className="p-6 max-w-3xl space-y-6">
+      <div className="p-6">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {/* AI Analysis Settings */}
-        <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-800">AI Analysis — Discovery</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Configure the AI model and prompt used to analyze discovered sites.
-              Powered by OpenRouter.
-            </p>
-          </div>
-
-          <div className="p-5 space-y-5">
-            {/* Model Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                AI Model
-              </label>
-              <select
-                value={aiModel}
-                onChange={e => setAiModel(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                {Object.entries(groupedModels).map(([provider, providerModels]) => (
-                  <optgroup key={provider} label={provider}>
-                    {providerModels.map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.label} ({m.tier})
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <p className="text-xs text-gray-400 mt-1">
-                Select the model for AI site analysis. Flagship models are more accurate, fast models are cheaper.
-              </p>
-            </div>
-
-            {/* Prompt Editor */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">
-                  Analysis Prompt
-                </label>
+        <div className="flex gap-6">
+          {/* Tab Navigation — Vertical Sidebar */}
+          <nav className="w-56 flex-shrink-0">
+            <div className="space-y-1">
+              {TABS.map(tab => (
                 <button
-                  onClick={handleResetPrompt}
-                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`w-full flex items-start gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                    activeTab === tab.key
+                      ? 'bg-primary-50 text-primary-700 border border-primary-200'
+                      : 'text-gray-600 hover:bg-gray-50 border border-transparent'
+                  }`}
                 >
-                  <RotateCcw size={12} />
-                  Reset to default
+                  <span className={`mt-0.5 ${activeTab === tab.key ? 'text-primary-600' : 'text-gray-400'}`}>
+                    {tab.icon}
+                  </span>
+                  <div>
+                    <p className={`text-sm font-medium ${activeTab === tab.key ? 'text-primary-700' : 'text-gray-700'}`}>
+                      {tab.label}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{tab.description}</p>
+                  </div>
                 </button>
-              </div>
-              <textarea
-                value={aiPrompt}
-                onChange={e => setAiPrompt(e.target.value)}
-                rows={16}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono leading-relaxed focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                This prompt is sent as the system message when analyzing sites. It defines how the AI evaluates and categorizes leads.
-              </p>
+              ))}
             </div>
+          </nav>
 
-            {/* Save Button */}
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {saved ? <Check size={16} /> : <Save size={16} />}
-                {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
-              </button>
-              {saved && (
-                <span className="text-sm text-green-600">Settings saved successfully</span>
-              )}
-            </div>
-          </div>
-        </section>
+          {/* Tab Content */}
+          <div className="flex-1 max-w-3xl">
+            {/* AI Analysis Tab */}
+            {activeTab === 'ai' && (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                  <h3 className="text-base font-semibold text-gray-800">AI Analysis — Discovery</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Configure the AI model and prompt used to analyze discovered sites. Powered by OpenRouter.
+                  </p>
+                </div>
 
-        {/* Vulnerability Database */}
-        <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center gap-2">
-              <Shield size={16} className="text-gray-600" />
-              <div>
-                <h3 className="text-sm font-semibold text-gray-800">WordPress Vulnerability Database</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Local copy of the Open WordPress Vulnerability Database (OWVD) used for security analysis.
-                </p>
-              </div>
-            </div>
-          </div>
+                <div className="p-6 space-y-6">
+                  {/* Model Selector */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      AI Model
+                    </label>
+                    <select
+                      value={aiModel}
+                      onChange={e => setAiModel(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      {Object.entries(groupedModels).map(([provider, providerModels]) => (
+                        <optgroup key={provider} label={provider}>
+                          {providerModels.map(m => (
+                            <option key={m.id} value={m.id}>
+                              {m.label} ({m.tier})
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      Select the model for AI site analysis. Flagship models are more accurate, fast models are cheaper.
+                    </p>
+                  </div>
 
-          <div className="p-5 space-y-4">
-            {/* Status */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Last Updated</p>
-                <p className="font-medium text-gray-800">
-                  {vulnDbStatus?.lastUpdated
-                    ? new Date(vulnDbStatus.lastUpdated).toLocaleString()
-                    : 'Never updated'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Vulnerabilities Tracked</p>
-                <p className="font-medium text-gray-800">
-                  {vulnDbStatus?.stats?.total ?? 0} total
-                  {vulnDbStatus?.stats?.byType && (
-                    <span className="text-xs text-gray-400 ml-1">
-                      ({Object.entries(vulnDbStatus.stats.byType).map(([type, count]: [string, any]) => `${count} ${type}`).join(', ')})
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
+                  {/* Prompt Editor */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Analysis Prompt
+                      </label>
+                      <button
+                        onClick={handleResetPrompt}
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        <RotateCcw size={12} />
+                        Reset to default
+                      </button>
+                    </div>
+                    <textarea
+                      value={aiPrompt}
+                      onChange={e => setAiPrompt(e.target.value)}
+                      rows={18}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono leading-relaxed focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y"
+                    />
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      This prompt is sent as the system message when analyzing sites. It defines how the AI evaluates and categorizes leads.
+                    </p>
+                  </div>
 
-            {/* Message */}
-            {vulnDbMessage && (
-              <div className={`text-sm px-3 py-2 rounded-lg ${
-                vulnDbMessage.startsWith('Error') || vulnDbMessage.startsWith('Update failed')
-                  ? 'bg-red-50 text-red-700 border border-red-200'
-                  : 'bg-green-50 text-green-700 border border-green-200'
-              }`}>
-                {vulnDbMessage}
+                  {/* Save Button */}
+                  <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {saved ? <Check size={16} /> : <Save size={16} />}
+                      {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
+                    </button>
+                    {saved && (
+                      <span className="text-sm text-green-600">Settings saved successfully</span>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Update Button */}
-            <button
-              onClick={handleVulnDbUpdate}
-              disabled={vulnDbUpdating}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {vulnDbUpdating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              {vulnDbUpdating ? 'Updating...' : 'Update Now'}
-            </button>
+            {/* Security Database Tab */}
+            {activeTab === 'security' && (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center gap-2.5">
+                    <Shield size={20} className="text-gray-600" />
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-800">WordPress Vulnerability Database</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Local copy of the Open WordPress Vulnerability Database (OWVD) used for security analysis.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  {/* Status Cards */}
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Last Updated</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {vulnDbStatus?.lastUpdated
+                          ? new Date(vulnDbStatus.lastUpdated).toLocaleString()
+                          : 'Never updated'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Total Vulnerabilities</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {vulnDbStatus?.stats?.total?.toLocaleString() ?? 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Breakdown by Type */}
+                  {vulnDbStatus?.stats?.byType && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Breakdown by Type</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {Object.entries(vulnDbStatus.stats.byType).map(([type, count]: [string, any]) => (
+                          <div key={type} className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3.5 py-2.5">
+                            <span className="text-sm text-gray-600 capitalize">{type}</span>
+                            <span className="text-sm font-semibold text-gray-800">{Number(count).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Message */}
+                  {vulnDbMessage && (
+                    <div className={`text-sm px-4 py-3 rounded-lg ${
+                      vulnDbMessage.startsWith('Error') || vulnDbMessage.startsWith('Update failed')
+                        ? 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-green-50 text-green-700 border border-green-200'
+                    }`}>
+                      {vulnDbMessage}
+                    </div>
+                  )}
+
+                  {/* Update Button */}
+                  <div className="pt-2 border-t border-gray-100">
+                    <button
+                      onClick={handleVulnDbUpdate}
+                      disabled={vulnDbUpdating}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {vulnDbUpdating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                      {vulnDbUpdating ? 'Updating database...' : 'Update Now'}
+                    </button>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Downloads the latest vulnerability data from the OWVD and imports it into the local database.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
