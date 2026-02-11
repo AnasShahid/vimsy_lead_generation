@@ -9,6 +9,53 @@ export interface AvailabilityResult {
   error?: string;
 }
 
+function detectAntiBot(
+  statusCode: number,
+  body: string,
+  headers: Record<string, string | string[] | undefined>
+): boolean {
+  // Cloudflare challenge page (403 or 503 with challenge)
+  if ((statusCode === 403 || statusCode === 503) && body) {
+    const cfPatterns = [
+      'cf-browser-verification',
+      'cf_chl_opt',
+      'challenge-platform',
+      'Checking if the site connection is secure',
+      'Enable JavaScript and cookies to continue',
+      'Attention Required! | Cloudflare',
+      'Just a moment...',
+    ];
+    for (const pattern of cfPatterns) {
+      if (body.includes(pattern)) return true;
+    }
+  }
+
+  // Generic CAPTCHA / bot detection
+  if (body) {
+    const botPatterns = [
+      'captcha',
+      'recaptcha',
+      'hCaptcha',
+      'Please verify you are a human',
+      'Access denied',
+      'bot detection',
+      'are you a robot',
+    ];
+    const bodyLower = body.toLowerCase();
+    // Only flag as anti-bot if the page is very short (challenge page, not a real page mentioning captcha)
+    if (body.length < 50000) {
+      for (const pattern of botPatterns) {
+        if (bodyLower.includes(pattern.toLowerCase()) && statusCode >= 400) return true;
+      }
+    }
+  }
+
+  // Cloudflare cf-mitigated header
+  if (headers['cf-mitigated'] === 'challenge') return true;
+
+  return false;
+}
+
 export async function checkAvailability(url: string): Promise<AvailabilityResult> {
   let isUp = false;
   let responseTimeMs = 0;
@@ -21,6 +68,21 @@ export async function checkAvailability(url: string): Promise<AvailabilityResult
     const res = await fetchUrl(url, { timeout: 15000 });
     statusCode = res.statusCode;
     responseTimeMs = res.responseTimeMs;
+
+    // Detect anti-bot protection (Cloudflare challenge, CAPTCHA, etc.)
+    const isAntiBot = detectAntiBot(res.statusCode, res.body, res.headers);
+    if (isAntiBot) {
+      // Site is technically up but blocking our scanner
+      return {
+        isUp: true,
+        responseTimeMs,
+        statusCode,
+        hasSitemap: false,
+        hasMetaDescription: false,
+        error: 'Blocked by anti-bot protection (Cloudflare/CAPTCHA)',
+      };
+    }
+
     isUp = statusCode >= 200 && statusCode < 500;
 
     // Check for meta description in HTML

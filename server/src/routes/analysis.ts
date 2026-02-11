@@ -139,6 +139,8 @@ router.get('/sites', (req, res) => {
           security_score: analysis.security_score,
           performance_score: analysis.performance_score,
           wp_health_score: analysis.wp_health_score,
+          seo_score: analysis.seo_score,
+          availability_score: analysis.availability_score,
           analyzed_at: analysis.analyzed_at,
         } : null,
         tags: tags[site.id] || [],

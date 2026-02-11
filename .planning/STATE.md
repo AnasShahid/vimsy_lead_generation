@@ -12,12 +12,12 @@
 ████████████████████ 100% (Phase 3)
 ```
 
-**Last activity:** 2026-02-11 - Completed Phase 3 (Technical Analysis & Scoring) — all 3 plans executed
+**Last activity:** 2026-02-11 - Fixed WPScan (HTTP-based scanner) + rewrote scoring to match PDF spec
 
 ## Session Continuity
 
 **Last session:** 2026-02-11
-**Stopped at:** Phase 3 complete
+**Stopped at:** Phase 3 complete + WPScan/scoring fixes applied
 **Resume file:** None
 **Next action:** Plan and execute Phase 4 (Reporting & Dashboard)
 
@@ -46,6 +46,7 @@ None — all current todos complete.
 
 | Todo | Area | Completed |
 |------|------|-----------|
+| Fix WPScan + Rewrite Scoring System | analysis, scoring | 2026-02-11 |
 | Populate emails_available_count from Hunter Discover | discovery | 2026-02-10 |
 
 ## Completed Todos
@@ -76,8 +77,11 @@ None — all current todos complete.
 - fetchPost utility added to http.ts for POST requests (used by Hunter Discover)
 - The prototype.html contains the original n8n workflow specification
 - Phase 3: Analysis infrastructure (schema, worker, routes), services (PSI, SSL, WPScan, vuln matcher, scoring), and UI (analysis page, detail drill-down, queue filters, tags, settings vuln DB)
-- Scoring: Security 40%, Performance 30%, WP Health 30%. Priority: critical (<40), high (40-55), medium (55-75), low (>75)
-- WPScan runs via Docker (vimsy-wpscan container), vulnerability data from local OWVD SQLite + API fallback
+- Scoring: Deduction-based (100 - deductions). Performance 30pts, Security 30pts, SEO 20pts, Availability 20pts. Priority: critical (0-40), high (41-60), medium (61-75), low (76-100)
+- WPScan: HTTP-based WordPress scanner (version via wp-json/feed/meta/readme, theme/plugin detection, user enumeration, config exposure). Docker WPScan optional fallback when WPSCAN_API_TOKEN set
+- Security headers checker (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
+- Availability checker (uptime, response time, sitemap detection, meta description check)
+- Vulnerability data from local OWVD SQLite + API fallback
 - Analysis worker processes 5 sites in parallel per batch via Promise.allSettled
 - Tags system: system-assigned (discovered, enriched, analyzed), stored in site_tags table
 

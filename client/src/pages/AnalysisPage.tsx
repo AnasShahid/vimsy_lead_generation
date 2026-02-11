@@ -287,7 +287,7 @@ export function AnalysisPage() {
                         <td className="px-4 py-3"><PriorityBadge priority={site.analysis?.priority_classification ?? null} /></td>
                         <td className="px-4 py-3"><ScoreCell score={site.analysis?.security_score} /></td>
                         <td className="px-4 py-3"><ScoreCell score={site.analysis?.performance_score} /></td>
-                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.wp_health_score} /></td>
+                        <td className="px-4 py-3"><ScoreCell score={site.analysis?.seo_score ?? site.analysis?.wp_health_score} /></td>
                         <td className="px-4 py-3"><AnalysisStatusBadge status={site.analysis_status} /></td>
                         <td className="px-4 py-3"><TagBadges tags={site.tags || []} size="sm" /></td>
                         <td className="px-4 py-3">

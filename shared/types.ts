@@ -348,10 +348,12 @@ export interface SiteAnalysis {
   // Vulnerability matching
   vulnerabilities_found: number;
   vulnerability_details: string | null;
-  // Sub-scores
+  // Sub-scores (actual category points retained)
   security_score: number | null;
   performance_score: number | null;
   wp_health_score: number | null;
+  availability_score: number | null;
+  seo_score: number | null;
   // Timestamps
   analyzed_at: string | null;
   created_at: string;

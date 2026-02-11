@@ -44,7 +44,7 @@ export function updateAnalysis(id: number, data: Partial<Omit<SiteAnalysis, 'id'
     'ssl_valid', 'ssl_issuer', 'ssl_expiry_date', 'ssl_days_until_expiry', 'ssl_protocol_version', 'ssl_cipher', 'ssl_chain_valid', 'ssl_raw_data',
     'wpscan_wp_version', 'wpscan_wp_version_status', 'wpscan_theme', 'wpscan_theme_version', 'wpscan_plugins', 'wpscan_users', 'wpscan_config_backups', 'wpscan_db_exports', 'wpscan_raw_data',
     'vulnerabilities_found', 'vulnerability_details',
-    'security_score', 'performance_score', 'wp_health_score',
+    'security_score', 'performance_score', 'wp_health_score', 'availability_score', 'seo_score',
     'analyzed_at',
   ];
 

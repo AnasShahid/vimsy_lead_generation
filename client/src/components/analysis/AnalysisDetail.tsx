@@ -142,7 +142,8 @@ export function AnalysisDetail({ siteId, onClose, onReanalyze }: AnalysisDetailP
           <ScoreBreakdown
             securityScore={analysis?.security_score ?? null}
             performanceScore={analysis?.performance_score ?? null}
-            wpHealthScore={analysis?.wp_health_score ?? null}
+            seoScore={analysis?.seo_score ?? analysis?.wp_health_score ?? null}
+            availabilityScore={analysis?.availability_score ?? null}
             healthScore={analysis?.health_score ?? null}
             priorityClassification={analysis?.priority_classification ?? null}
           />

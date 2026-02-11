@@ -84,28 +84,26 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
     console.error(`[Analysis] Site ${siteId}: SSL analysis failed: ${err.message}`);
   }
 
-  // Step 4: WPScan (only for WordPress sites)
-  if (isWordPress) {
-    try {
-      console.log(`[Analysis] Site ${siteId}: Running WPScan...`);
-      wpscanResult = await runWPScan(url);
-      if (wpscanResult.error) {
-        console.warn(`[Analysis] Site ${siteId}: WPScan warning: ${wpscanResult.error}`);
-      } else {
-        console.log(`[Analysis] Site ${siteId}: WPScan — WP ${wpscanResult.wpVersion || 'unknown'} (${wpscanResult.wpVersionStatus || 'unknown'}), ${wpscanResult.plugins.length} plugins`);
-      }
-    } catch (err: any) {
-      console.error(`[Analysis] Site ${siteId}: WPScan failed: ${err.message}`);
+  // Step 4: WPScan (always run — HTTP scanner is lightweight and can detect WP on any site)
+  try {
+    console.log(`[Analysis] Site ${siteId}: Running WPScan...${isWordPress ? '' : ' (not flagged as WP)'}`);
+    wpscanResult = await runWPScan(url);
+    if (wpscanResult.error) {
+      console.warn(`[Analysis] Site ${siteId}: WPScan warning: ${wpscanResult.error}`);
+    } else {
+      console.log(`[Analysis] Site ${siteId}: WPScan — WP ${wpscanResult.wpVersion || 'unknown'} (${wpscanResult.wpVersionStatus || 'unknown'}), ${wpscanResult.plugins.length} plugins`);
     }
+  } catch (err: any) {
+    console.error(`[Analysis] Site ${siteId}: WPScan failed: ${err.message}`);
+  }
 
-    // Step 5: Vulnerability matching (only if WPScan returned data)
-    if (wpscanResult && !wpscanResult.error) {
-      try {
-        console.log(`[Analysis] Site ${siteId}: Matching vulnerabilities...`);
-        vulnResult = await matchVulnerabilities(wpscanResult);
-      } catch (err: any) {
-        console.error(`[Analysis] Site ${siteId}: Vulnerability matching failed: ${err.message}`);
-      }
+  // Step 5: Vulnerability matching (only if WPScan returned data)
+  if (wpscanResult && !wpscanResult.error) {
+    try {
+      console.log(`[Analysis] Site ${siteId}: Matching vulnerabilities...`);
+      vulnResult = await matchVulnerabilities(wpscanResult);
+    } catch (err: any) {
+      console.error(`[Analysis] Site ${siteId}: Vulnerability matching failed: ${err.message}`);
     }
   }
 
@@ -160,10 +158,12 @@ export async function analyzeSite(siteId: number, analysisId: number): Promise<A
       // Vulnerabilities
       vulnerabilities_found: vulnResult?.totalVulnerabilities ?? 0,
       vulnerability_details: vulnResult ? JSON.stringify(vulnResult) : null,
-      // Sub-scores
+      // Sub-scores (actual category points retained)
       security_score: scoring.securityScore,
       performance_score: scoring.performanceScore,
       wp_health_score: scoring.seoScore,
+      seo_score: scoring.seoScore,
+      availability_score: scoring.availabilityScore,
       // Timestamp
       analyzed_at: new Date().toISOString(),
     });

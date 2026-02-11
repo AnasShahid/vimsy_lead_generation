@@ -142,6 +142,24 @@ export function runMigrations(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_site_analyses_status ON site_analyses(status)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_site_analyses_priority ON site_analyses(priority_classification)');
 
+  // Phase 3.1: Add availability_score column to site_analyses
+  const analysisNewColumns = [
+    { name: 'availability_score', sql: 'ALTER TABLE site_analyses ADD COLUMN availability_score REAL' },
+    { name: 'seo_score', sql: 'ALTER TABLE site_analyses ADD COLUMN seo_score REAL' },
+  ];
+  for (const col of analysisNewColumns) {
+    try {
+      db.exec(col.sql);
+      console.log(`[DB] Migration: added column '${col.name}' to site_analyses`);
+    } catch (err: any) {
+      if (err.message.includes('duplicate column name')) {
+        // Column already exists, skip
+      } else {
+        console.error(`[DB] Migration error for '${col.name}': ${err.message}`);
+      }
+    }
+  }
+
   // Phase 3: Create site_tags table
   db.exec(`
     CREATE TABLE IF NOT EXISTS site_tags (
