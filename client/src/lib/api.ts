@@ -282,4 +282,19 @@ export const api = {
 
   getReportSignedUrl: (siteId: number, disposition: 'inline' | 'attachment' = 'inline') =>
     request<any>(`/reports/${siteId}/signed-url?disposition=${disposition}`),
+
+  // Leads
+  getLeads: (params: Record<string, string | number | boolean | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+      .join('&');
+    return request<any>(`/leads${query ? `?${query}` : ''}`);
+  },
+
+  getLeadDetail: (id: number) =>
+    request<any>(`/leads/${id}`),
+
+  getLeadStats: () =>
+    request<any>('/leads/stats'),
 };
