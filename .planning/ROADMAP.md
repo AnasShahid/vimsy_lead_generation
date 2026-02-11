@@ -14,7 +14,7 @@ Phase 1  ██████████ 100%  Discovery Improvements
 Phase 2  ██████████ 100%  Contact Enrichment
 Phase 3  ██████████ 100%  Technical Analysis & Scoring
 Phase 4  ██████████ 100%  PDF Report Generation
-Phase 4.1░░░░░░░░░░  0%  Leads Tracking Page
+Phase 4.1██████████ 100%  Leads Tracking Page
 Phase 5  ░░░░░░░░░░  0%  Cold Email Outreach
 Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 ```
@@ -111,14 +111,14 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 **Depends on:** Phase 2, Phase 4
 
 **Success Criteria:**
-- [ ] Unified Leads page shows all sites that have left Discovery (enrichment onwards)
-- [ ] Each lead row displays: domain, company, contacts count, enrichment status, analysis status, report status, outreach status
-- [ ] Expandable detail view per lead showing all contacts, analysis scores, and action history
-- [ ] Sites remain visible in enrichment tab after being sent to analysis (pipeline_stage no longer removes from previous views)
-- [ ] Filter leads by any status column (enrichment, analysis, outreach) and by tags
-- [ ] "Select all by filter" allows bulk actions on filtered subsets
-- [ ] Analysis can be triggered directly from the Leads page without losing enrichment context
-- [ ] Leads page becomes the central tracking hub; enrichment/analysis tabs become action-focused tools
+- [x] Unified Leads page shows all sites that have left Discovery (enrichment onwards)
+- [x] Each lead row displays: domain, company, contacts count, enrichment status, analysis status, report status, outreach status
+- [x] Expandable detail view per lead showing all contacts, analysis scores, and action history
+- [x] Sites remain visible in enrichment tab after being sent to analysis (pipeline_stage no longer removes from previous views)
+- [x] Filter leads by any status column (enrichment, analysis, outreach) and by tags
+- [x] "Select all by filter" allows bulk actions on filtered subsets
+- [x] Analysis can be triggered directly from the Leads page without losing enrichment context
+- [x] Leads page becomes the central tracking hub; enrichment/analysis tabs become action-focused tools
 
 **Research flag:** None
 
@@ -200,11 +200,11 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | REQ-028 | 5 | Pending |
 | REQ-029 | 5 | Pending |
 | REQ-030 | 6 | Pending |
-| REQ-031 | 4.1 | Pending |
-| REQ-032 | 4.1 | Pending |
-| REQ-033 | 4.1 | Pending |
-| REQ-034 | 4.1 | Pending |
-| REQ-035 | 4.1 | Pending |
+| REQ-031 | 4.1 | ✅ Done |
+| REQ-032 | 4.1 | ✅ Done |
+| REQ-033 | 4.1 | ✅ Done |
+| REQ-034 | 4.1 | ✅ Done |
+| REQ-035 | 4.1 | ✅ Done |
 | REQ-036 | 5 | Pending |
 | REQ-037 | 6 | Pending |
 
@@ -221,4 +221,4 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | 6 — Pipeline Dashboard & Metrics | Low | 1 |
 
 ---
-*Last updated: 2026-02-11 — Phase 4 complete, all 5 plans executed*
+*Last updated: 2026-02-11 — Phase 4.1 complete, 2 plans executed*

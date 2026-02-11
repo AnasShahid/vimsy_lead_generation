@@ -104,19 +104,19 @@
 | REQ-022 | 3 | TBD | ✅ Done |
 | REQ-023 | 3 | TBD | ✅ Done |
 | REQ-024 | 3 | TBD | ✅ Done |
-| REQ-025 | 4 | TBD | Pending |
+| REQ-025 | 4 | 04-01..05 | ✅ Done |
 | REQ-026 | 5 | TBD | Pending |
 | REQ-027 | 5 | TBD | Pending |
 | REQ-028 | 5 | TBD | Pending |
 | REQ-029 | 5 | TBD | Pending |
 | REQ-030 | 6 | TBD | Pending |
-| REQ-031 | 4.1 | TBD | Pending |
-| REQ-032 | 4.1 | TBD | Pending |
-| REQ-033 | 4.1 | TBD | Pending |
-| REQ-034 | 4.1 | TBD | Pending |
-| REQ-035 | 4.1 | TBD | Pending |
+| REQ-031 | 4.1 | 04.1-01, 04.1-02 | ✅ Done |
+| REQ-032 | 4.1 | 04.1-02 | ✅ Done |
+| REQ-033 | 4.1 | 04.1-01, 04.1-02 | ✅ Done |
+| REQ-034 | 4.1 | 04.1-01 | ✅ Done |
+| REQ-035 | 4.1 | 04.1-02 | ✅ Done |
 | REQ-036 | 5 | TBD | Pending |
 | REQ-037 | 6 | TBD | Pending |
 
 ---
-*Last updated: 2026-02-11 — Phase 3 done, Phase 4.1 inserted, REQ-036/037 added*
+*Last updated: 2026-02-11 — Phase 4.1 complete, REQ-031 through REQ-035 done*

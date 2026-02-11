@@ -3,23 +3,23 @@
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** 4.1 of 7 (Leads Tracking Page)
-**Plan:** 0 of 2 (Not started)
-**Status:** Ready to execute
+**Phase:** 5 of 7 (Cold Email Outreach)
+**Plan:** 0 of ? (Not started)
+**Status:** Ready to plan
 
 **Progress:**
 ```
-████████████████████ 100% (Phase 4 — completed 2026-02-11)
+████████████████████ 100% (Phase 4.1 — completed 2026-02-11)
 ```
 
-**Last activity:** 2026-02-11 - Created 2 plans for Phase 4.1 (Leads Tracking Page)
+**Last activity:** 2026-02-11 - Completed Phase 4.1 (Leads Tracking Page) — 2 plans executed
 
 ## Session Continuity
 
 **Last session:** 2026-02-11
-**Stopped at:** Phase 4 complete
+**Stopped at:** Phase 4.1 complete
 **Resume file:** None
-**Next action:** Plan and execute Phase 4.1 (Leads Tracking Page)
+**Next action:** Plan Phase 5 (Cold Email Outreach)
 
 ## Decisions
 
@@ -92,6 +92,7 @@ None.
 - Analysis worker processes 5 sites in parallel per batch via Promise.allSettled
 - Tags system: system-assigned (discovered, enriched, analyzed, reported), stored in site_tags table
 - Phase 4: PDF Report Generation — Puppeteer + Handlebars, AI-generated sections (exec summary, recommendations, pitch), auto-queued after analysis
+- Phase 4.1: Leads Tracking Page — unified /leads page with stats bar, quick filter tabs, granular dropdowns, 10-column table, expandable detail panel (contacts, analysis, report), bulk actions, polling. Backend: /api/leads with JOINed query, /api/leads/stats, /api/leads/:id
 - Report worker processes 1 site at a time (Puppeteer is memory-heavy), sequential within job
 - Report branding configurable via Settings > Report Branding tab (company name, logo, color, disclaimer, CTA, contact info)
 - Reports stored in data/reports/ as PDF files, paths in site_reports table
