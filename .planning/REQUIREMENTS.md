@@ -50,6 +50,14 @@
 
 - **REQ-030** — Pipeline dashboard with stats and conversion metrics across all steps
 
+### Leads Tracking (Step 2.5 — Unified View)
+
+- **REQ-031** — Unified Leads page showing all post-discovery sites with combined enrichment, analysis, report, and outreach status
+- **REQ-032** — Expandable lead detail view with contacts, analysis scores, reports, and action history
+- **REQ-033** — Multi-column filtering (enrichment status, analysis status, outreach status, tags) with "select all by filter"
+- **REQ-034** — Sites persist in enrichment view after being sent to analysis (no data loss on stage progression)
+- **REQ-035** — Bulk actions (analyze, generate report, send outreach) triggerable from Leads page
+
 ## v2 — Future Enhancements
 
 - Advanced analytics and A/B testing for email templates
@@ -100,6 +108,11 @@
 | REQ-028 | 5 | TBD | Pending |
 | REQ-029 | 5 | TBD | Pending |
 | REQ-030 | 6 | TBD | Pending |
+| REQ-031 | 7 | TBD | Pending |
+| REQ-032 | 7 | TBD | Pending |
+| REQ-033 | 7 | TBD | Pending |
+| REQ-034 | 7 | TBD | Pending |
+| REQ-035 | 7 | TBD | Pending |
 
 ---
-*Last updated: 2026-02-07*
+*Last updated: 2026-02-11*

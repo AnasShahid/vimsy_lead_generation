@@ -5,7 +5,7 @@
 **Project:** Vimsy Lead Gen Platform
 **Milestone:** v1.0
 **Created:** 2026-02-07
-**Phases:** 6
+**Phases:** 7
 
 ## Progress
 
@@ -16,6 +16,7 @@ Phase 3  ░░░░░░░░░░  0%  Technical Analysis & Scoring
 Phase 4  ░░░░░░░░░░  0%  PDF Report Generation
 Phase 5  ░░░░░░░░░░  0%  Cold Email Outreach
 Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
+Phase 7  ░░░░░░░░░░  0%  Leads Tracking Page
 ```
 
 ## Phases
@@ -139,6 +140,28 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 
 ---
 
+### Phase 7: Leads Tracking Page
+
+**Goal:** A unified Leads page that tracks every post-discovery site through the entire pipeline — showing contacts, analysis status, reports, and outreach in one place — so enrichment data is never lost when sites move to later stages.
+
+**Requirements:** REQ-031, REQ-032, REQ-033, REQ-034, REQ-035
+
+**Depends on:** Phase 2
+
+**Success Criteria:**
+- [ ] Unified Leads page shows all sites that have left Discovery (enrichment onwards)
+- [ ] Each lead row displays: domain, company, contacts count, enrichment status, analysis status, report status, outreach status
+- [ ] Expandable detail view per lead showing all contacts, analysis scores, and action history
+- [ ] Sites remain visible in enrichment tab after being sent to analysis (pipeline_stage no longer removes from previous views)
+- [ ] Filter leads by any status column (enrichment, analysis, outreach) and by tags
+- [ ] "Select all by filter" allows bulk actions on filtered subsets
+- [ ] Analysis can be triggered directly from the Leads page without losing enrichment context
+- [ ] Leads page becomes the central tracking hub; enrichment/analysis tabs become action-focused tools
+
+**Research flag:** None
+
+---
+
 ## Requirement Coverage
 
 | Requirement | Phase | Status |
@@ -173,6 +196,11 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | REQ-028 | 5 | Pending |
 | REQ-029 | 5 | Pending |
 | REQ-030 | 6 | Pending |
+| REQ-031 | 7 | Pending |
+| REQ-032 | 7 | Pending |
+| REQ-033 | 7 | Pending |
+| REQ-034 | 7 | Pending |
+| REQ-035 | 7 | Pending |
 
 ## Timeline Estimate
 
@@ -184,6 +212,7 @@ Phase 6  ░░░░░░░░░░  0%  Pipeline Dashboard & Metrics
 | 4 — PDF Report Generation | Medium | 2 |
 | 5 — Cold Email Outreach | High | 3 |
 | 6 — Pipeline Dashboard & Metrics | Low | 1 |
+| 7 — Leads Tracking Page | Medium | 2 |
 
 ---
-*Last updated: 2026-02-07 — Phase 1 complete*
+*Last updated: 2026-02-11 — Phase 7 added*
